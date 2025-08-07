@@ -28,23 +28,31 @@ body{
 .mainBackground{
     height: 100dvh;
     width:100dvw;
-    display: block;
+    display: grid;
+    
 
 
 }
 
-#root{
-    height: 100dvh;
-    width:100dvw;
-    margin :0px;
-    padding:0px;
+.page-header{
+
+    min-height: 10dvh;
+    max-height: 15dvh;
 }
+
+.page-title{
+
+    font-size: 3rem;
+}
+
+
 
 .login-form-container{
    display: flexbox;
-    width: 50%;
-    height: 50%;
+    width: 75%;
+    height: 100%;
     margin-inline: auto;
+    margin-top: 0px;
     
 }
 
@@ -54,7 +62,17 @@ body{
     align-items: center;
     align-content: center;
     justify-content: center;
-    width: 50%;
-    height: 50%;
+    width: 80%;
+    height: 100%;
+
+}
+
+
+.loading-indicator{
+
+
+    opacity: 0.7;
+    align-self: center;
+    justify-self: center;
 
 }

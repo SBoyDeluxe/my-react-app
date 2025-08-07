@@ -16,6 +16,7 @@ import { Theme, ThemeValues } from '../../theme';
 import { FirebaseAPIClient } from '../../firebaseapiClient';
 import { User } from '../../User';
 import { firebaseClientContext } from '../context/ClientContext';
+import { Header } from './Header';
 
 /**
  * Describe a React-state, a value that may change during run-time and should trigger a re-render
@@ -151,8 +152,9 @@ return (<>
         <themeContext.Provider value={themeState.stateVariable}>
                 <title>Scrumboard 3000 : Be agil!</title>
                 <Background cssClassName='mainBackground' backgroundColor={themeState.stateVariable.primaryBackgroundColor}>
+                        <Header headerColor={themeState.stateVariable.primaryBackgroundColor}  />
                                 {loading ? (<>  
-                                                <img style = {{zIndex : 10000, alignSelf : "center", backgroundColor : "red"}} src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
+                                                <img className="loading-indicator" src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
                                                         
                                                 </img>
                                            </>      ) :( <></>)          }
