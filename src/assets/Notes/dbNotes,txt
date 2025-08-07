@@ -1,0 +1,47 @@
+                                                Firebase : Realtime-database
+
+
+                                                                                                                                                              
+
+
+            Innehåll:           
+
+                            /user - Innehåller krypterade User-objekt krypterade med AES-GCM, med en password-username-based derived key via scrypt samt salt-värdet som användes
+                            /project
+                            /developer
+                            /manager
+                            /username - Innehåller alla usernames, platsen på vilken de står motsvarar index för usern i user-tabellen, alltså där vi kan använda oss av vår password derived key för att försöka dekryptera.
+                            /mailbox - En mailbox för en specifik user, där en assymmetrisk nyckel används för att delge information som t.ex dekrypteringsnycklar för projekt m.m, all hantering av denna sker backend. Public keyn förvaras i Mailbox-objektet 
+
+
+
+            Struktur:           
+
+                         users : 
+                         {        saltbytes : Uint8Array(16)     
+                            
+                                 /*Man måste querya på en specifik user endpoint, vi ser ifall en användare finns på username plainTextArrayen, tillåtet med read och write */
+                                    -> <encryptedUserObjectWithPasswordAsKeyInBase64> : {
+                                        objectString : JSON.stringify(Developer||client|manager)
+
+                                    }
+                                       
+
+
+                         }
+
+                         signup:{
+                            /*Kollar så username inte är upptaget*/
+                                usernames:[] 
+
+                         }                   
+
+                         mailbox :
+                         {
+                                publicKey : JWK,
+                                mail :[
+                                        <Alla skickade objekt, läggs till igenom push>
+
+                                ]
+
+                         }                                                 
