@@ -24,14 +24,15 @@ export function Form({cssClassName, onSubmit, children = null,fieldSetOptions = 
     switch((fieldSetOptions!=(null))){
 
         case true: {
-                    return(
+                    return(     <form className={cssClassName} >
                                 <fieldset>
                                             <legend>    {fieldSetOptions.children} </legend>
-                                                        <form >
+                                                        
                                                                 {children}
-                                                        </form>
+                                                        
                                            
                                 </fieldset>
+                                </form>
 
                 )
 

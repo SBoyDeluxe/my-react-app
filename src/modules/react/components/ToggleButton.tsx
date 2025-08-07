@@ -5,7 +5,7 @@ import { ClickHandler, State } from "./App"
 import React from "react"
 
 export type ToggleButtonProp = {
-    onClick : ClickHandler,
+    onClick : React.MouseEventHandler<HTMLButtonElement>,
     children?: React.ReactNode,
     cssClassName: string
     style : CSSProperties,
@@ -21,7 +21,7 @@ export function ToggleButton({ cssClassName, style ,children, onClick, isDisable
     return (
 
         <>
-        <Button cssClassName={cssClassName} isDisabled = {isDisabled} onClick={(event: React.MouseEvent<Element, MouseEvent>)=>onClick.onClick(event)} children = {children} style={style} ></Button>
+        <Button cssClassName={cssClassName} isDisabled = {isDisabled} onClick={onClick} children = {children} style={style} ></Button>
         </>
     )
 

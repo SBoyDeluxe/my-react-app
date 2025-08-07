@@ -38,25 +38,23 @@ export function TogglePair(
 
     function setSignUpStyle(toggleState:boolean): CSSProperties {
         return (!toggleState) ? {
-            backgroundColor: appThemeContext.focusedBackgroundColor,
+              backgroundColor: appThemeContext.focusedContentColor,
             color: appThemeContext.focusedContrastColor,
-            textDecoration: `double underline ${appThemeContext.focusedContentColor}`
+            textDecoration: `double underline ${appThemeContext.focusedBackgroundColor}`
         } : {
-            backgroundColor: appThemeContext.unfocusedBackgroundColor,
-
-            color: appThemeContext.unfocusedContrastColor,
+              backgroundColor: appThemeContext.focusedBackgroundColor,
+            color: appThemeContext.focusedContrastColor,
         };
     }
 
     function setLoginStyle(toggleState :boolean): CSSProperties {
         return (toggleState) ? {
-            backgroundColor: appThemeContext.focusedBackgroundColor,
+            backgroundColor: appThemeContext.focusedContentColor,
             color: appThemeContext.focusedContrastColor,
-            textDecoration: `double underline ${appThemeContext.focusedContentColor}`
+            textDecoration: `double underline ${appThemeContext.focusedBackgroundColor}`
         } : {
-            backgroundColor: appThemeContext.unfocusedBackgroundColor,
-
-            color: appThemeContext.unfocusedContrastColor,
+             backgroundColor: appThemeContext.focusedBackgroundColor,
+            color: appThemeContext.focusedContrastColor,
         };
     }
 }

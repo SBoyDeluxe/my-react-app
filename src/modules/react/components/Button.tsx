@@ -1,4 +1,3 @@
-import Color from "colorjs.io/types";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
 import React from "react";

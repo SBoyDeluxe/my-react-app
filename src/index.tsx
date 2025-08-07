@@ -4,6 +4,7 @@ import { App } from './modules/react/components/App';
 import { FirebaseAPIClient } from './modules/firebaseapiClient';
 
 let fbclient = new FirebaseAPIClient();
+fbclient.loginUser("Hej", "Hej")
 let container = document.getElementById("app")!;
 let root = createRoot(container)
 root.render(
