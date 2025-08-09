@@ -66,9 +66,9 @@ function TitleForm({projectTitleFormState, setProjectTitleFormState }:TitleFormP
     }
 
 
-    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:titleFormFieldSetText}} key={window.crypto.randomUUID()}  >
-            <Input key={window.crypto.randomUUID()} onEvent={handleChange}  inputState={projectTitleFormState.projectTitle} inputType="text" labelName="Title :" name="projectTitle" cssClassName="project-title-input" />
-           <Input key={window.crypto.randomUUID()} onEvent={handleChange} inputState={projectTitleFormState.projectDescription} inputType="text" labelName="Project description :" name="projectDescription" cssClassName="project-description-input" />
+    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:titleFormFieldSetText}}  >
+            <Input onEvent={handleChange}  inputState={projectTitleFormState.projectTitle} inputType="text" labelName="Title :" name="projectTitle" cssClassName="project-title-input" />
+           <Input onEvent={handleChange} inputState={projectTitleFormState.projectDescription} inputType="text" labelName="Project description :" name="projectDescription" cssClassName="project-description-input" />
     </Form>)
   
 
@@ -94,9 +94,9 @@ function DateForm({projectDateFormState, setProjectDateFormState }:DateFormProps
     }
 
 
-    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:dateFormFieldSetText}} key={window.crypto.randomUUID()}  >
-            <Input key={window.crypto.randomUUID()} onEvent={handleChange}  inputState={projectDateFormState.startDate} inputType="text" labelName="Title :" name="startDate" cssClassName="project-start-date-input" />
-           <Input key={window.crypto.randomUUID()} onEvent={handleChange} inputState={projectDateFormState.endDate} inputType="text" labelName="Project description :" name="endDate" cssClassName="project-end-date-input" />
+    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:dateFormFieldSetText}}  >
+            <Input onEvent={handleChange}  inputState={projectDateFormState.startDate} inputType="text" labelName="Title :" name="startDate" cssClassName="project-start-date-input" />
+           <Input onEvent={handleChange} inputState={projectDateFormState.endDate} inputType="text" labelName="Project description :" name="endDate" cssClassName="project-end-date-input" />
     </Form>);
   
 
@@ -125,10 +125,10 @@ function ParticipantForm({projectParticipantFormState, setProjectParticipantForm
     }
 
 
-    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:ParticipantFormFieldSetText}} key={window.crypto.randomUUID()}  >
-            <Input key={window.crypto.randomUUID()} onEvent={handleChange}  inputState={projectParticipantFormState.managers} inputType="text" labelName="Title :" name="managers" cssClassName="project-managers-input" />
-           <Input key={window.crypto.randomUUID()} onEvent={handleChange} inputState={projectParticipantFormState.developers} inputType="text" labelName="Project description :" name="developers" cssClassName="project-developers-input" />
-           <Input key={window.crypto.randomUUID()} onEvent={handleChange} inputState={projectParticipantFormState.client} inputType="text" labelName="Project description :" name="client" cssClassName="project-clients-input" />
+    return(<Form cssClassName={"project-title-description-form" } fieldSetOptions={ {children:ParticipantFormFieldSetText}}  >
+            <Input onEvent={handleChange}  inputState={projectParticipantFormState.managers} inputType="text" labelName="Title :" name="managers" cssClassName="project-managers-input" />
+           <Input onEvent={handleChange} inputState={projectParticipantFormState.developers} inputType="text" labelName="Project description :" name="developers" cssClassName="project-developers-input" />
+           <Input onEvent={handleChange} inputState={projectParticipantFormState.client} inputType="text" labelName="Project description :" name="client" cssClassName="project-clients-input" />
     </Form>);
   
 
@@ -176,9 +176,10 @@ const [projectTitleFormState, setProjectTitleFormState] = React.useState({
     
    
     return (<>
-        <Background key={window.crypto.randomUUID()} cssClassName="login-form-container" backgroundColor={appThemeContext.secondaryBackgroundColor}>
-           <TitleForm key={window.crypto.randomUUID()} projectTitleFormState={projectTitleFormState} setProjectTitleFormState={setProjectTitleFormState}></TitleForm>
-           <DateForm key={window.crypto.randomUUID()} projectDateFormState={projectTimeDateFormState} setProjectDateFormState={setProjectTimeDateFormState}></DateForm>
+        <Background cssClassName="login-form-container" backgroundColor={appThemeContext.secondaryBackgroundColor}>
+           <TitleForm projectTitleFormState={projectTitleFormState} setProjectTitleFormState={setProjectTitleFormState}></TitleForm>
+           <DateForm projectDateFormState={projectTimeDateFormState} setProjectDateFormState={setProjectTimeDateFormState}></DateForm>
+           <ParticipantForm projectParticipantFormState={projectParticipantFormState} setProjectParticipantFormState={setProjectParticipantFormState}></ParticipantForm>
         </Background>
         </>
     )

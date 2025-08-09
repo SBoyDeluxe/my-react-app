@@ -229,19 +229,19 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
 
         return (<>
                 <themeContext.Provider value={theme}>
-                <Routes key={(window.crypto.randomUUID())}>
-                        <Route key={(window.crypto.randomUUID())} path='/' element={
+                <Routes >
+                        <Route  path='/' element={
                                 <>
-                                <LoginRegistrationPage  key={(window.crypto.randomUUID())}  formState={formState} loading={loadingStore} login={login} loginToggle={loginToggle} setFormState={setFormState} setLoginToggle={setLoginToggle} signUp={signUp} themeState={themeState} >
+                                <LoginRegistrationPage    formState={formState} loading={loadingStore} login={login} loginToggle={loginToggle} setFormState={setFormState} setLoginToggle={setLoginToggle} signUp={signUp} themeState={themeState} >
 
                                 </LoginRegistrationPage>
                                 </>
                         }>
                                 
                         </Route>
-                        <Route key={(window.crypto.randomUUID())} path='/logged-in' element={
+                        <Route  path='/logged-in' element={
 
-                                <LoggedInPage key={(window.crypto.randomUUID())} setProjectFormState={setCreateProjectState}  createProject={createProject} projectFormState={projectState} loading={loadingStore} userState={userStore} activeTabNumberState={activeTabNumberState} theme={theme} themeState={themeState} >
+                                <LoggedInPage  setProjectFormState={setCreateProjectState}  createProject={createProject} projectFormState={projectState} loading={loadingStore} userState={userStore} activeTabNumberState={activeTabNumberState} theme={theme} themeState={themeState} >
 
                                 </LoggedInPage>
 

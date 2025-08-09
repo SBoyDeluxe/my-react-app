@@ -61,13 +61,13 @@ export function LoggedInPage({  activeTabNumberState, loading, userState, themeS
         // }
         return (
                
-                <Background key={(window.crypto.randomUUID())} cssClassName='mainBackground' backgroundColor={appThemeContext.primaryBackgroundColor}>
-                         <title>Scrumboard 3000 : Be agil!</title>
-                        <Header key={(window.crypto.randomUUID())} headerColor={appThemeContext.primaryBackgroundColor}>
+                <Background  cssClassName='mainBackground' backgroundColor={appThemeContext.primaryBackgroundColor}>
+                        
+                        <Header  headerColor={appThemeContext.primaryBackgroundColor}>
 
                         </Header>
                         {loading ? (<>
-                                <img key={window.crypto.randomUUID()} className="loading-indicator" src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
+                                <img  className="loading-indicator" src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
 
                                 </img>
                         </>) : (<>
@@ -75,9 +75,9 @@ export function LoggedInPage({  activeTabNumberState, loading, userState, themeS
 
                         </>)}
 
-                        <ProjectCreationForm key={window.crypto.randomUUID()} ></ProjectCreationForm>
+                        <CreateProjectTab createProject={createProject} inputState={projectFormState} setCreateProjectState={setProjectFormState}></CreateProjectTab>
                               
-                        <Footer key={(window.crypto.randomUUID())} content={<ThemeSelector key={window.crypto.randomUUID()} themeState={themeState}></ThemeSelector>} />
+                        <Footer  content={<ThemeSelector  themeState={themeState}></ThemeSelector>} />
 
                 </Background>
         

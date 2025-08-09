@@ -60,7 +60,7 @@ export function TabRow({pageNames, activeTabNumberState}:TabRowProps){
 
 
     return (<>
-            <div key={divKey} className="tab-row">
+            <div  className="tab-row">
                 {(content)}
             </div>    
             </>);
