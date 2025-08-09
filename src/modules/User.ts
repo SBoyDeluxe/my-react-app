@@ -276,14 +276,14 @@ export class Manager  {
          *      
          *       
          */
-        managerType : string[];
+        managerType : string[]|null;
         /**
          * The team of managers that are responsible for the project together 
          * 
          * 
          * 
          */
-        managerTeam : Manager[];
+       // managerTeam : Manager[]|null;
         /**
          * The developerTeams that the manager is in charge of assigning to features 
          * 
@@ -297,18 +297,19 @@ export class Manager  {
          * 
          *      
          */
-        developerTeams : Developer[][];
+       // developerTeams : Developer[][]|null;
 
         constructor(userId : number , username : string, 
         managerType : string[],
-        managerTeam : Manager[],
-        developerTeams : Developer[][]){
+        //managerTeam : Manager[]|null,
+        //developerTeams : Developer[][]|null
+        ){
 
 
             this.userId = userId;
             this.username = username;
-            this.managerTeam = managerTeam;
-            this.developerTeams = developerTeams;
+           // this.managerTeam = managerTeam;
+           // this.developerTeams = developerTeams;
             this.managerType = managerType;
         }
 

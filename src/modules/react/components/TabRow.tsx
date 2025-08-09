@@ -1,4 +1,4 @@
-import { CSSProperties, useContext } from "react"
+import { CSSProperties, Key, useContext } from "react"
 import { State } from "./App"
 import { Button } from "./Button"
 import { ToggleButton } from "./ToggleButton"
@@ -23,10 +23,13 @@ export type TabRowProps = {
 
 export function TabRow({pageNames, activeTabNumberState}:TabRowProps){
 
-    
+         let keys : React.Key[] = pageNames.map((val)=>{
+                return ( window.crypto.randomUUID().toString(),
+                 window.crypto.randomUUID().toString())});
+         let divKey : React.Key = window.crypto.randomUUID();
         const appThemeContext = useContext(themeContext);
 
-        let content : React.ReactNode = new Array(pageNames.length);
+     
 
         function setButtonStyle(toggleState:boolean): CSSProperties {
             return (!toggleState) ? {
@@ -40,21 +43,27 @@ export function TabRow({pageNames, activeTabNumberState}:TabRowProps){
             };
         }
 //`${tabText}-tab-button`
-    pageNames.forEach((tabText, index)=>{
+    let content : React.ReactNode  = pageNames.map(
+        (tabText, index)=>{
           let  isSelected : boolean = (index === activeTabNumberState.stateVariable);
-        content[index] = (
-                <>
-                        <ToggleButton key={()=>(window.crypto.randomUUID())}  isDisabled={isSelected} cssClassName="tab-button" onClick={()=>activeTabNumberState.setState(index)} style={setButtonStyle((activeTabNumberState.stateVariable===index))}>
-                            <p>{tabText}</p>
+         
+         return (
+                
+                        <ToggleButton children={<p key={keys[keys.length-index]}>{tabText}</p>} key={keys[index]}  
+                         isDisabled={isSelected} cssClassName="tab-button" onClick={()=>activeTabNumberState.setState(index)} 
+                         style={setButtonStyle((activeTabNumberState.stateVariable===index))}>
+                            
                         </ToggleButton>
-                </>
-
-
-        )
+                
+                )
     });
 
 
-    return content;
+    return (<>
+            <div key={divKey} className="tab-row">
+                {(content)}
+            </div>    
+            </>);
 
 
 

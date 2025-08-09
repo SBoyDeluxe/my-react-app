@@ -28,9 +28,10 @@ import { useContext } from 'react';
 
 
 export function Background({cssClassName,backgroundColor, children=null, clickHandler}:BackgroundProp){
+    
     const appThemeContext = useContext(themeContext);
         let backgroundColorIn = (backgroundColor) ? backgroundColor : appThemeContext.primaryBackgroundColor; 
-    return(<div  className={cssClassName} style={ 
+    return(<div className={cssClassName} style={ 
             {backgroundColor : backgroundColorIn,
               
             }

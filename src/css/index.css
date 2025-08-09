@@ -53,6 +53,7 @@ body{
 
    height: auto;
    max-width: 100dvw;
+   flex-shrink:2
 }}
 @media(min-width :600px){
 .page-header{
@@ -75,6 +76,7 @@ body{
     justify-self: end;
     min-height: 10dvh;
     max-height: 20dvh;
+    flex-shrink: 2;
 }}
 
 .page-title{
@@ -82,6 +84,10 @@ body{
     font-size: 3rem;
     width: 100%;
     height:auto;
+}
+.tab-button{
+
+
 }
 
 
@@ -93,6 +99,7 @@ body{
     align-items: center;
     justify-content: space-around;
     align-self: center;
+    flex-grow: 2;
     
 }}
 
@@ -105,6 +112,7 @@ body{
     height: auto;
     align-items: center;
     justify-content: center;
+    flex-grow: 2;
  
     
 }

@@ -12,14 +12,16 @@ export function TogglePair(
             {toggleState}:TogglePairProps){
                 
           let toggleVal = toggleState.stateVariable;
-      const handleClick : ClickHandler = { 
-        onClick: (event :  React.MouseEvent<Element, MouseEvent>) => {
+      
+          function handleClick(event :  React.MouseEvent<Element, MouseEvent>){
+            event.preventDefault();
+            event.stopPropagation();
             toggleVal = !toggleState.stateVariable;
             toggleState.setState(toggleVal);
             setLoginStyle(toggleVal);
             setSignUpStyle(toggleVal);
-      }};     
-
+          }
+      
     const appThemeContext = useContext(themeContext);
             
             let loginStyle: CSSProperties = setLoginStyle(toggleState.stateVariable);

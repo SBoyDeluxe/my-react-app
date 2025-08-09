@@ -70,7 +70,7 @@ export function LoginForm({login,signUp,setFormState, formState,toggleState, }:L
     const appThemeContext = React.useContext(themeContext);
     let buttonString = (toggleState.stateVariable) ? ("Login") : "Sign-up";
     let buttonCssString = (toggleState.stateVariable) ? ("login-button") : "sign-up-button";
-    return(
+    return(<>
         <Background cssClassName="login-form-container" backgroundColor={appThemeContext.secondaryBackgroundColor}>
                     <Form cssClassName="login-form" fieldSetOptions={ {children :TogglePair({toggleState})}} >
                             <Input inputState={formState.username} cssClassName="username-input" inputType="text" labelName="Username : " name="username"   onEvent={handleChange} onInput={handleInput} ></Input>
@@ -80,8 +80,8 @@ export function LoginForm({login,signUp,setFormState, formState,toggleState, }:L
                       
                     </Form>
         </Background>
-
-    )
+        </>
+    );
 
     
 

@@ -43,7 +43,7 @@ export type InputProps = {
 "button"|
 "color" |
 "date"|
-"datetime"|
+"datetime-local"|
 "email" |
 "month" |
 "number"|
@@ -54,8 +54,8 @@ export type InputProps = {
 "time"|
 "url"|
 "week"),
-onEvent? : (e :React.ChangeEvent<HTMLInputElement>)=>void,
-onInput?:(event: React.FormEvent<HTMLInputElement>)=>void,
+onEvent? : ((event: React.ChangeEvent<HTMLInputElement>) => void),
+onInput?:((event: React.FormEvent<HTMLInputElement>)=>void),
 cssClassName : string,
 labelName:string
 inputState : string | number | readonly string[] ,
@@ -70,43 +70,47 @@ name : string
 export function Input({inputType, onEvent, cssClassName, labelName, inputState, onInput, name}:InputProps){
     let children : React.ReactNode = (<>
     </>);
-    if(onEvent && onInput){
+    if(onEvent !== undefined && onInput !==undefined){
 
-      children =  (<>
-                <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
+      children =  (
+                <label htmlFor={name}  className={labelName} > <p>{labelName}</p>
+                        <input value={inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}  id={name}  onChange={(e)=>onEvent(e)}>
 
                         </input>
 
                 </label>
-        </>)
+        )
     } 
-    else if(onInput){
-          children =  (<>
+    else{
+     if(onInput !== undefined){
+          children =  (
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
+                        <input id={name} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
 
                         </input>
 
                 </label>
-        </>)
+        )
 
     }
-    else if(onEvent){
+    else if(onEvent !== undefined){
 
-                   children =  (<>
+                   children =  (
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
+                        <input value = {inputState} id={name}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
 
                         </input>
 
                 </label>
-        </>)
+        )
 
     }
+}
     
-    return(
-                children
+    return(<>
+                
+        {children}
+        </>
     )
 
 

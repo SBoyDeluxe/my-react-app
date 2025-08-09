@@ -7,9 +7,25 @@ import { themeContext } from "../context/ThemeContext";
 
      export type HeaderProps = {
         
-        renderContent? : ()=>React.ReactNode,
-        
-
+        children? : (React.ReactNode),
+        /**
+         * The title of the header - textstring to be displayed 
+         * 
+         *  - standard : {@link ApplicationConfiguration.title}
+         */ 
+        title? : string,
+        /**
+         * The css class name of the header
+         * 
+         *  -standard : page-header
+         */
+        cssClassName? : string,
+        /**
+         * The css class name of the title component
+         * 
+         *      -standard : page-title
+         */
+        titleClassName? : string
 
 
 
@@ -18,23 +34,23 @@ import { themeContext } from "../context/ThemeContext";
     }
 
 /**
- * The basic header of the page, always containing the title of the page, any alternate content will be added after 
+ * The basic header of the page, containing the title of the application unless specified, any alternate content will be added after 
  * the titile, going from left to right and up to down
  * 
  * @param 
  * @returns 
  */
-export function Header({ renderContent}:HeaderProps){
-const title = ApplicationConfiguration.title;
+export function Header({titleClassName="page-title" ,cssClassName="page-header" , children, title=ApplicationConfiguration.title}:HeaderProps){
+
 const appThemeContext = useContext(themeContext);
 return (
 <>
-<Background cssClassName="page-header" backgroundColor={appThemeContext.primaryContentColor} >
+<Background cssClassName={cssClassName} backgroundColor={appThemeContext.primaryContentColor} >
 
     <p style={{
         backgroundColor:appThemeContext.secondaryContrastColor,
-    }} className="page-title">{title}</p>
-        {renderContent}
+    }} className={titleClassName}>{title}</p>
+        {children}
         
 
 </Background>

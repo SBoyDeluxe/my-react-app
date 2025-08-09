@@ -276,8 +276,8 @@ export class FirebaseAPIClient {
      * 
      * @see  | {@linkcode FirebaseAPIClient.getUserIds} |
      */
-    async createProject(project: Project, projectKeyObject: ProjectKeyObject, userIds?: number[]) {
-
+    async createProject(project: Project,  userIds?: number[]) {
+        const projectKeyObject = project.projectKeyObject;
         const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${project.projectKeyObject.projectIndex}.json`);
         const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(`projectupdate/${project.projectKeyObject.projectIndex}.json`);
 
@@ -383,7 +383,7 @@ export class FirebaseAPIClient {
 
 
         function deserializeProjectData(projectData: Project) {
-            return new Project(projectData.title, projectKeyObject, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+            return new Project(projectData.title, projectKeyObject, projectData.managerTeam, null ,projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
         }
     }
 
@@ -834,7 +834,7 @@ export class FirebaseAPIClient {
                         //We set up an eventsource for the logged in user´s mailbox
                         const mailBoxEventSource = await this.setMailboxListener(user, userPrivKey!);
 
-                        user.password
+                      
 
                         user.mailbox.setEventSource(mailBoxEventSource);
 
@@ -842,8 +842,8 @@ export class FirebaseAPIClient {
 
                     }).then((user) => {
                         //Sets current user to the validated user
-                        firebaseApiClient.currentUser = user;
-                        return user
+                        this.currentUser = user;
+                        return user;
                     });
 
 

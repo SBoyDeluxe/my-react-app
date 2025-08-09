@@ -13,7 +13,9 @@ import { themeContext } from "../context/ThemeContext";
 
 
 
-export function LoginRegistrationPage({ themeState, loading, signUp, login, formState, setLoginToggle, loginToggle, setFormState }: { themeState: State<ThemeValues>; loading: boolean; signUp: (username: string, password: string) => void; login: (username: string, password: string) => Promise<void>; formState: { username: string; password: string; }; setLoginToggle: React.Dispatch<React.SetStateAction<boolean>>; loginToggle: boolean; setFormState: React.Dispatch<React.SetStateAction<{ username: string; password: string; }>>; }): React.ReactNode {
+export function LoginRegistrationPage({ themeState, loading, signUp, login, formState, setLoginToggle, loginToggle, setFormState }: { themeState: State<ThemeValues>; loading: boolean; signUp: (username: string, password: string) => void; login: (username: string, password: string) => void; formState: { username: string; password: string; }; setLoginToggle: React.Dispatch<React.SetStateAction<boolean>>; loginToggle: boolean; setFormState: React.Dispatch<React.SetStateAction<{ username: string; password: string; }>>; }): React.ReactNode {
+
+        
         return (<>
 
                 <themeContext.Provider value={themeState.stateVariable}>

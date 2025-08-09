@@ -1,6 +1,7 @@
 import {ReactNode, useContext} from "react"
 import { Background } from "./background"
 import { themeContext } from "../context/ThemeContext"
+import { randomUUID } from "crypto";
 
 
 export type FooterProps = {
@@ -14,7 +15,7 @@ export function Footer({content}:FooterProps):ReactNode{
 
     return(
         <>
-            <Background cssClassName="page-footer" >
+            <Background key={()=>randomUUID} cssClassName="page-footer" >
                                 {content}
             </Background>
         </>

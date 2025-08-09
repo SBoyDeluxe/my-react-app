@@ -41,7 +41,7 @@ export class Project {
     *       - The encryption/decryption key of the project (AES-GCM), sent to the participants on creation
     *
     */
-    projectKeyObject: ProjectKeyObject;
+    projectKeyObject!: ProjectKeyObject;
     // A project is initiated by Manager at the behest of some programatically real Client (Say a client contacting
     // a consultant-firm about making a webpage, where some Manager at the firm instantiates the project and assigns developers from
     // the firm to the project, with a specification from the client and feature-wishes from the client).
@@ -108,13 +108,7 @@ export class Project {
 
     constructor(
         title: string,
-        /** 
-        * The key-object containing 
-        *       - The index of the project, a randomUUID
-        *       - The encryption/decryption key of the project (AES-GCM), sent to the participants on creation
-        *
-        */
-        projectKeyObject: ProjectKeyObject,
+      
         managerTeam: Manager[],
         /**The clients should be given access to see the progress of the development of their project/features 
          * -> Given read-priviliege for the project data.
@@ -127,7 +121,7 @@ export class Project {
         /**The features wished for in the project
          * 
          */
-        features: Feature[],
+        features: Feature[]|null,
         /**The team at hand for developing the features in the project
          * 
          */
@@ -143,7 +137,23 @@ export class Project {
         timeConstraints: TimeConstraints,
     ) {
 
+       const projectIndex = window.crypto.randomUUID();
 
+       const projectCryptoKeyPromise =  CryptoUtilObject.generateAESGCMProjectKey().then((projectKey)=>{
+
+                /** 
+        * The key-object containing 
+        *       - The index of the project, a randomUUID
+        *       - The encryption/decryption key of the project (AES-GCM), sent to the participants on creation
+        *
+        */
+        this.projectKeyObject = {
+                projectIndex : projectIndex,
+                projectKey : projectKey
+        }
+       });
+
+      
 
         this.managerTeam = managerTeam;
         /**The clients should be given access to see the progress of the development of their project/features 
@@ -176,7 +186,7 @@ export class Project {
         this.timeconstraints = timeConstraints;
 
         this.developerTeamTypes = this.developerTeam.map((dev) => dev.developerType);
-        this.projectKeyObject = projectKeyObject;
+      
 
         this.title = title;
 
@@ -244,6 +254,18 @@ export class Project {
 
         return fractionSum / numberOfFeatures;
 
+    }
+
+    public addFeature(feature:Feature){
+        if(!this.features){
+        this.features = [feature];
+        this.featureTypes = [feature.type];
+            
+    }
+    else{
+        this.features.concat(feature);
+        this.featureTypes.concat(feature.type);
+    }
     }
 
 
