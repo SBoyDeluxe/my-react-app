@@ -11,11 +11,12 @@ import { TabRow, TabRowProps } from "../components/TabRow";
 import { ThemeSelector } from "../components/ThemeSelector";
 import { themeContext } from "../context/ThemeContext";
 import { ProjectCreationForm } from "../components/ProjectCreationForm";
+import React from "react";
 
 
 
 
-export function LoggedInPage({  activeTabNumberState, loading, userState, themeState, createProject, setProjectFormState, projectFormState }: {
+export function LoggedInPage({loading, userState, themeState, createProject, setProjectFormState, projectFormState }: {
         setProjectFormState: React.Dispatch<React.SetStateAction<{
                 projectTitle: string;
                 projectDescription: string;
@@ -34,7 +35,7 @@ export function LoggedInPage({  activeTabNumberState, loading, userState, themeS
                 projectDevelopers: string;
                 projectClients: string;
         };
-        activeTabNumberState: State<number>; loading: boolean; userState: User | null; themeState: State<ThemeValues>; createProject: (
+     createProject: (
                 projectTitle: string,
                 projectDescription: string,
                 projectStartTime: string,
@@ -44,8 +45,11 @@ export function LoggedInPage({  activeTabNumberState, loading, userState, themeS
                 projectClients: string,
         ) => void;
 }): React.ReactNode {
-
-
+          const [activeTabNumber, setActiveTab] = React.useState(0);
+          const activeTabNumberState: State<number> = {
+                setState: setActiveTab,
+                stateVariable: activeTabNumber
+        };
          const appThemeContext = useContext(themeContext);
         // const tabPageHeaderProps: HeaderProps = {
         //         cssClassName: "tab-page-header",
@@ -75,7 +79,7 @@ export function LoggedInPage({  activeTabNumberState, loading, userState, themeS
 
                         </>)}
 
-                        <CreateProjectTab createProject={createProject} inputState={projectFormState} setCreateProjectState={setProjectFormState}></CreateProjectTab>
+                    <CreateProjectTab createProject={createProject}></CreateProjectTab>
                               
                         <Footer  content={<ThemeSelector  themeState={themeState}></ThemeSelector>} />
 

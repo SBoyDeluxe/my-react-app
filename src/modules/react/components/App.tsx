@@ -87,17 +87,9 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
         const appThemeContext = React.useContext(themeContext);
         const loadingStore = useLoadingStore();
         const userStore = useUserStore();
-        const [createProjectState, setCreateProjectState] = React.useState({
-                projectTitle: "",
-                projectDescription: "",
-                projectStartTime: "",
-                projectEndTime: "",
-                projectManagers: "",
-                projectDevelopers: "",
-                projectClients: ""
-        });
+       
 
-       const projectState = useMemo(()=>createProjectState, [createProjectState]);
+   
         const navigate = useNavigate();
         //When a change in the user-state happens we now someone have logged in, signed up or logged out <=> logged out/not logged in yet : userStore === null
         // || logged-in/signed-up <=> userStore !== null && loadingStore ==false
@@ -171,7 +163,7 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
 
         const [loginToggle, setLoginToggle] = React.useState(initToggle);
         const [theme, setTheme] = React.useState(initTheme);
-        const [activeTabNumber, setActiveTab] = React.useState(0);
+      
 
 
 
@@ -203,10 +195,7 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
                 }
         }, [theme]);
 
-        const activeTabNumberState: State<number> = {
-                setState: setActiveTab,
-                stateVariable: activeTabNumber
-        };
+      
 
         // const projectState: State<{
         //         projectTitle: string;
@@ -241,7 +230,7 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
                         </Route>
                         <Route  path='/logged-in' element={
 
-                                <LoggedInPage  setProjectFormState={setCreateProjectState}  createProject={createProject} projectFormState={projectState} loading={loadingStore} userState={userStore} activeTabNumberState={activeTabNumberState} theme={theme} themeState={themeState} >
+                                <LoggedInPage    createProject={createProject}  loading={loadingStore} userState={userStore}  theme={theme} themeState={themeState} >
 
                                 </LoggedInPage>
 
