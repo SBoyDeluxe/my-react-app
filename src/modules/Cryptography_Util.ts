@@ -3,11 +3,10 @@ import { Project } from "./project";
 import { Feature } from "./feature";
 import { Task } from "./Task";
 import file from "../assets/firebase_app_auth_key.json";
-import { decode, encode } from "base-64";
-import * as nodeCrypto from "node:crypto";
+import {type,Base64} from 'js-base64';
 import { MailContent } from "./mailbox";
-
-
+import { escape, unescape } from "node:querystring";
+    import { pbkdf2 } from "node:crypto";
 
 
 
@@ -85,7 +84,7 @@ export class CryptoUtilObject {
     * @param base64String 
     */
     static decodeBase64(base64String: string): string {
-        return decode(base64String);
+        return Base64.decode(base64String);
 
     }
     /**
@@ -95,7 +94,8 @@ export class CryptoUtilObject {
      * @param stringToBeBase64 
      */
     static encodeBase64(stringToBeBase64: string): string {
-        return encode(stringToBeBase64);
+        return  Base64.encode(stringToBeBase64,true);
+
 
     }
     /**Generates a secure password key that can be in session-storage ( ; Not exposing the password), when this is used, make sure
@@ -161,7 +161,7 @@ export class CryptoUtilObject {
         //Scrypt usage for password-based key derivation, we now also, if needed, generate the salt to minimize exposure time
         let keyPromise: Promise<Buffer<ArrayBufferLike>> = new Promise<Buffer<ArrayBufferLike>>((resolve, reject) => {
 
-            nodeCrypto.pbkdf2(combinedUsernamePasswordByteArray,
+            pbkdf2(combinedUsernamePasswordByteArray,
                 saltBytes,
                 100000,
                 256,
@@ -739,9 +739,11 @@ export class CryptoUtilObject {
 
 
             const dataBuffer = new TextEncoder().encode(data).buffer;
-           const digest = window.crypto.subtle.digest({name : "SHA-512"}, dataBuffer);
+           const digest = window.crypto.subtle.digest({name : "SHA-256"}, dataBuffer);
+           const hashArray = Array.from(new Uint8Array( await digest)); 
+            const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join(""); 
 
-           return  new TextDecoder().decode(await digest);
+           return  hashHex;
 
     }
     /**

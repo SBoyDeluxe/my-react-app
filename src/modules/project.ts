@@ -41,7 +41,7 @@ export class Project {
     *       - The encryption/decryption key of the project (AES-GCM), sent to the participants on creation
     *
     */
-    projectKeyObject!: ProjectKeyObject;
+    projectKeyObject: Promise<ProjectKeyObject>;
     // A project is initiated by Manager at the behest of some programatically real Client (Say a client contacting
     // a consultant-firm about making a webpage, where some Manager at the firm instantiates the project and assigns developers from
     // the firm to the project, with a specification from the client and feature-wishes from the client).
@@ -65,21 +65,21 @@ export class Project {
     /**The features wished for in the project
      * @memberof Project
      */
-    features: Feature[];
+    features: Feature[]|null;
     /**The team at hand for developing the features in the project
      * @memberof Project
      */
-    developerTeam: Developer[];
+    developerTeam: Developer[]|null;
     /**The different competences in the developer team -> For example, "back-end", "full-stack", "artist". "P.R" etc.
      * Example developerTeam[0] would have the type(s) developerTeamTypes[0]
      * 
      * @memberof Project
      */
-    developerTeamTypes: String[][];
+    developerTeamTypes: String[][]|null;
     /**The featureTypes in the project, Ex: ["Marketing", "Front-end"...]
      * @memberof Project
      */
-    featureTypes!: string[];
+    featureTypes: string[] | null;
 
     /**A description of the overall project, for example, make a scheduling web-app for a warehouse company, with specific features 
      * that the client specifies and that then gets delegated to the developer team
@@ -98,7 +98,7 @@ export class Project {
      */
     timeconstraints: TimeConstraints;
 
-    hash : string|null = null;
+    hash : Promise<string>;
 
 
     //End of property list
@@ -125,7 +125,7 @@ export class Project {
         /**The team at hand for developing the features in the project
          * 
          */
-        developerTeam: Developer[],
+        developerTeam: Developer[]|null,
 
 
         /**A description of the overall project, for example, make a scheduling web-app for a warehouse company, with specific features 
@@ -139,7 +139,7 @@ export class Project {
 
        const projectIndex = window.crypto.randomUUID();
 
-       const projectCryptoKeyPromise =  CryptoUtilObject.generateAESGCMProjectKey().then((projectKey)=>{
+        this.projectKeyObject =  CryptoUtilObject.generateAESGCMProjectKey().then((projectKey)=>{
 
                 /** 
         * The key-object containing 
@@ -147,10 +147,10 @@ export class Project {
         *       - The encryption/decryption key of the project (AES-GCM), sent to the participants on creation
         *
         */
-        this.projectKeyObject = {
+        return ({
                 projectIndex : projectIndex,
                 projectKey : projectKey
-        }
+        })
        });
 
       
@@ -168,7 +168,7 @@ export class Project {
          * 
          */
         this.features = features;
-        this.featureTypes = features.map((feature) => feature.type);
+        this.featureTypes =(features!==null) ? features.map((feature) => feature.type) : null;
         /**The team at hand for developing the features in the project
          * 
          */
@@ -185,14 +185,14 @@ export class Project {
          */
         this.timeconstraints = timeConstraints;
 
-        this.developerTeamTypes = this.developerTeam.map((dev) => dev.developerType);
+        this.developerTeamTypes = (developerTeam!==null) ? this.developerTeam?.map((dev) => dev.developerType) : null;
       
 
         this.title = title;
 
         //We produce a hash on creation of everything but the ProjectKeyObject
 
-         CryptoUtilObject.createHash(JSON.stringify(this as Exclude<Project, (ProjectKeyObject | ArrayBuffer)>)).then((hash)=>this.hash = hash );
+        this.hash = CryptoUtilObject.createHash(JSON.stringify(this as Omit<Project, (ProjectKeyObject | ArrayBuffer)>));
 
 
 
@@ -265,6 +265,25 @@ export class Project {
     else{
         this.features.concat(feature);
         this.featureTypes.concat(feature.type);
+    }
+    }
+    public addDevelopers(devs:Developer[]){
+        if(!this.developerTeam){
+        this.developerTeam = devs;
+        this.developerTeamTypes = (devs.filter((dev)=>dev.developerType[0]!=="")[0]!==undefined ) ? devs.filter((dev)=>dev.developerType[0]!=="").map((developerWithTypes)=>developerWithTypes.developerType) : null;
+            
+    }
+    else{
+        this.developerTeam.concat(devs);
+        const devTeamTypes = (devs.filter((dev)=>dev.developerType[0]!=="")[0]!==undefined ) ? devs.filter((dev)=>dev.developerType[0]!=="").map((developerWithTypes)=>developerWithTypes.developerType) : null;
+
+
+        if(!this.developerTeamTypes){
+            this.developerTeamTypes = devTeamTypes;
+        }
+        else{
+            this.developerTeamTypes = (devTeamTypes) ?this.developerTeamTypes.concat(devTeamTypes) : devTeamTypes;
+        }
     }
     }
 

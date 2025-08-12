@@ -10,6 +10,7 @@ import { BrowserRouter } from 'react-router';
 let container = document.getElementById("app")!;
 let root = createRoot(container);
 
+
 root.render(
   <StrictMode>
     <BrowserRouter>

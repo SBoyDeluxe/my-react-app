@@ -43,7 +43,7 @@ export type InputProps = {
 "button"|
 "color" |
 "date"|
-"datetime"|
+"datetime-local"|
 "email" |
 "month" |
 "number"|
@@ -60,21 +60,24 @@ cssClassName : string,
 labelName:string
 inputState : string | number | readonly string[] ,
 style? : CSSProperties
-name : string
+name : string,
+list? : string
 }
 /**
  * Generates a labeled input field of the type = inputType.
  * 
  * 
  */
-export function Input({inputType, onEvent, cssClassName, labelName, inputState, onInput, name}:InputProps){
+export function Input({inputType, onEvent, cssClassName, labelName, inputState, onInput, name, list}:InputProps){
     let children : React.ReactNode = (<>
     </>);
     if(onEvent && onInput){
 
+
+        
       children =  (<>
-                <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
+                <label  htmlFor={name} className={labelName} > <p>{labelName}</p>
+                        <input list={list} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
 
                         </input>
 

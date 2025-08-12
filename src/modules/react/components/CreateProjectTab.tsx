@@ -1,15 +1,16 @@
-import { Fragment, ReactNode, useContext, useReducer } from "react";
+import { Fragment, Key, ReactNode, useContext } from "react";
 import { Form } from "./Form";
 import { Input } from "./Input";
 import { FieldSetOptions } from "./Form";
 import { themeContext } from "../context/ThemeContext";
 import { Button } from "./Button";
-import { State } from "./App";
-import React from "react";
-import { Client, Manager } from "../../User";
+import * as React from "react";
 import { Background } from "./background";
 import { ClientInputData, ParticipantInputData, useParticipantReducer } from "./reducers/ParticipantInputReducer";
 
+import { ApplicationConfiguration } from "../application_config";
+import { UserStore } from "../store/UserStore";
+import { firebaseClientContext } from "../context/ClientContext";
 export type CreateProjectTabProps = {
 
     createProjectState: {
@@ -30,17 +31,23 @@ export type CreateProjectTabProps = {
         projectDevelopers: string;
         projectClients: string;
     }>>,
-    createProject: (
-        projectTitle: string,
-        projectDescription: string,
-        projectStartTime: string,
-        projectEndTime: string,
-        projectManagers: string,
-        projectDevelopers: string,
-        projectClients: string,
+    createProject: (({ projectDescription, projectTitle, }: {
+    projectTitle: string;
+    projectDescription: string;
+}, { projectClients, projectDevelopers, projectManagers }: {
+    projectDevelopers: ParticipantInputData[];
+    projectManagers: ParticipantInputData[];
+    projectClients: ClientInputData[];
+}, { projectEndTime, projectStartTime }: {
+    projectStartTime: string;
+    projectEndTime: string;
+})=> void)
 
-    ) => void
 }
+
+
+  
+
 
 
 /**
@@ -50,27 +57,16 @@ export type CreateProjectTabProps = {
 export function CreateProjectTab({ createProject }: CreateProjectTabProps): ReactNode {
 
 
+
     const createProjectText = (<p>{"Create Project"}</p>);
     const fieldSetDateLegendText = (<p>{"Start-date -> End-date :"}</p>);
     const participantsLegendText = (<p>{"Add participants :"}</p>);
     const appThemeContext = useContext(themeContext);
     const fieldSetOptions: FieldSetOptions = { children: createProjectText, };
     const dateFieldSetOptions: FieldSetOptions = { children: fieldSetDateLegendText, textColor: appThemeContext.secondaryContentColor };
-    // const [projectTitleFormState, setProjectTitleFormState] = React.useState({
-    //     projectTitle: "",
-    //     projectDescription: ""
-    // });
-    // const [projectTimeDateFormState, setProjectTimeDateFormState] = React.useState({
-    //     startDate: "",
-    //     endDate: ""
-    // });
-    // const [projectParticipantFormState, setProjectParticipantFormState] = React.useState({
-    //     managers: "",
-    //     developers: "",
-    //     client: ""
-    // });
 
- const [participantState, participantDispatch] = useParticipantReducer();
+
+    const [participantState, participantDispatch] = useParticipantReducer();
 
     const [createProjectState, setCreateProjectState] = React.useState(() => {
 
@@ -82,7 +78,6 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
             projectEndTime: "",
         })
     });
-
 
 
 
@@ -121,18 +116,21 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
     function handleClick(mouseEvent: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         //Check so that all fields are filled
         mouseEvent.preventDefault();
+     
+
 
         console.log(createProjectState);
-        if (createProjectState.projectTitle && createProjectState.projectDescription && createProjectState.projectStartTime && createProjectState.projectEndTime && createProjectState.projectManagers && createProjectState.projectDevelopers) {
-            createProject(createProjectState.projectTitle, createProjectState.projectDescription, createProjectState.projectStartTime, createProjectState.projectEndTime, createProjectState.projectManagers, createProjectState.projectDevelopers, createProjectState.projectClients);
-        }
+        console.log(participantState);
+
+        createProject({projectTitle:createProjectState.projectTitle, projectDescription : createProjectState.projectDescription}, {...participantState}, 
+           {projectStartTime:createProjectState.projectStartTime, projectEndTime : createProjectState.projectEndTime});
+        // if (createProjectState.projectTitle && createProjectState.projectDescription && createProjectState.projectStartTime && createProjectState.projectEndTime && participantState.projectManagers && participantState.projectDevelopers ) {
+        //     createProject(createProjectState.projectTitle, createProjectState.projectDescription, createProjectState.projectStartTime, createProjectState.projectEndTime, participantState.projectManagers, participantState.projectDevelopers, participantState.projectClients);
+        // }
     }
 
 
-{/* <p>{"Please enter any participants in the following format : \n Managers : <username1>:<type1>,<type2>,... ; <username2> <type1>,<type2>,... \n Developers : <username1>:<type1>,<type2>,... ; <username2> <type1>,<type2>,... \n Clients : <username1>, <username2>.... "}</p>
-            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectManagers} inputType="text" labelName="Add managers :" name="projectManagers" cssClassName="project-managers-input" />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectDevelopers} inputType="text" labelName="Add developers :" name="projectDevelopers" cssClassName="project-developers-input" />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectClients} inputType="text" labelName="Add clients :" name="projectClients" cssClassName="project-clients-input" /> */}
+
 
     return (
 
@@ -142,11 +140,16 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
         }}>
             <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectTitle} inputType="text" labelName="Title :" name="projectTitle" cssClassName="project-title-input" />
             <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectDescription} inputType="text" labelName="Project description :" name="projectDescription" cssClassName="project-description-input" />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectStartTime} inputType="date" labelName="Start time :" name="projectStartTime" cssClassName="project-start-time-input" />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectEndTime} inputType="date" labelName="End time :" name="projectEndTime" cssClassName="project-end-time-input" />
-            <ParticipantInput participantInputDataList={participantState.projectManagers}></ParticipantInput>
-            <ParticipantInput participantInputDataList={participantState.projectDevelopers}></ParticipantInput>
-            <ParticipantInput participantInputDataList={participantState.projectClients}></ParticipantInput>
+            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectStartTime} inputType="datetime-local" labelName="Start time :" name="projectStartTime" cssClassName="project-start-time-input" />
+            <Input onEvent={handleChange} onInput={handleInput} inputState={createProjectState.projectEndTime} inputType="datetime-local" labelName="End time :" name="projectEndTime" cssClassName="project-end-time-input" />
+            <h3>Managers:</h3>
+            <ParticipantInput onSubmitUser={(usernameInput, userTypeInput, userId) => participantDispatch({ type: "ADD_MANAGER_INPUT_DATA", payload: { username: usernameInput, userType: userTypeInput, userId } })} onRemoveUserType={(usernameInput, userTypeToRemove) => { participantDispatch({ type: "REMOVE_MANAGER_USER_TYPE", payload: { username: usernameInput, userType: userTypeToRemove } }) }} onAddUserType={(usernameInput, userType) => { participantDispatch({ type: "ADD_MANAGER_USER_TYPE", payload: { username: usernameInput, userType: userType } }) }} onRemoveUser={(username) => { participantDispatch({ type: "REMOVE_MANAGER_INPUT_DATA", payload: { username: username } }) }} participantInputDataList={participantState.projectManagers}></ParticipantInput>
+            <br></br>
+            <h3>Devs:</h3>
+            <ParticipantInput onSubmitUser={(usernameInput, userTypeInput, userId) => participantDispatch({ type: "ADD_DEVELOPER_INPUT_DATA", payload: { username: usernameInput, userType: userTypeInput, userId : userId } })} onRemoveUserType={(usernameInput, userTypeToRemove) => { participantDispatch({ type: "REMOVE_DEVELOPER_USER_TYPE", payload: { username: usernameInput, userType: userTypeToRemove } }) }} onAddUserType={(usernameInput, userType) => { participantDispatch({ type: "ADD_DEVELOPER_USER_TYPE", payload: { username: usernameInput, userType: userType } }) }} onRemoveUser={(username) => { participantDispatch({ type: "REMOVE_DEVELOPER_INPUT_DATA", payload: { username: username } }) }} participantInputDataList={participantState.projectDevelopers}></ParticipantInput>
+            <br></br>
+            <h3>Clients</h3>
+            <ParticipantInput onSubmitUser={(username, userTypeInut, userId) => { participantDispatch({ type: "ADD_CLIENT_INPUT_DATA", payload: { username: username, userId : userId } }) }} onRemoveUser={(username) => { participantDispatch({ type: "REMOVE_CLIENT_INPUT_DATA", payload: { username: username } }) }} participantInputDataList={participantState.projectClients}></ParticipantInput>
             <Button isDisabled={false} cssClassName="create-project-submit-button" children={createProjectText} onClick={handleClick}></Button>
 
         </Form>
@@ -157,27 +160,41 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
 }
 type ParticipantInputProps = {
 
-  
+    onAddUserType?: (username: string, userTypeInput: string) => void,
+
+    onRemoveUserType?: (username: string, userTypeToRemove: string) => void,
+
+    onRemoveUser: (username: string) => void,
+
+    onSubmitUser: (username: string, userTypeInput?: string[], userId : number) => void,
     /**
      * Called to show the participants already input by the user as a list 
      * 
      */
-    participantInputDataList: (ParticipantInputData[] | ClientInputData[])
+    participantInputDataList: ParticipantInputData[] | ClientInputData[]
 }
-function ParticipantInput({ participantInputDataList }: ParticipantInputProps) {
+function ParticipantInput({ participantInputDataList, onAddUserType, onRemoveUser, onRemoveUserType, onSubmitUser }: ParticipantInputProps) {
 
 
+    /*Should have implemented an early type check => boolean  */
+    const isClientInputData = Object.keys(participantInputDataList[0]).length === 2;
 
-   
-  const  appThemeContext = useContext(themeContext);
+    //Used to target people from list
+    const [selectedUsername, setSelectedUsername] = React.useState(UserStore.getSnapshotUser()?.username.username);
+
+    const [userInput, setUserInput] = (isClientInputData) ? React.useState({ usernameInput: "" }) : React.useState({ usernameInput: "", userTypeInput: "" });
+
+    const appFirebaseClientContext = useContext(firebaseClientContext);
     let handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { };
     let handleInput = (event: React.FormEvent<HTMLInputElement>) => { };
 
+
     let inputElement = (<></>);
+    let listElement = (<></>);
+    let userTypeButtons = (<></>);
 
 
-    if (Object.values(participantInputDataList[0]).length > 1) {
-        const [userInput, setUserInput] = React.useState({ usernameInput: "", userTypeInput: "" });
+    if (!isClientInputData) {
 
         handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -204,21 +221,62 @@ function ParticipantInput({ participantInputDataList }: ParticipantInputProps) {
 
 
 
+
+
         inputElement = (<>
-    
-            <Input onInput={handleInput} onEvent={handleChange} inputState={userInput.usernameInput} inputType="text" name="usernameInput" labelName="Enter username :" cssClassName="add-participant-username-input" />
-            <Button children={(<p>{"Remove user with username from list"}</p>)} />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={userInput.userTypeInput} inputType="text" name="userTypeInput" labelName="Add user-type :" cssClassName="add-participant-usertype-input" />
-            <Button children={(<p>{"+"}</p>)} />
-            <Button children={(<p>{"-"}</p>)} />
-        <Button children={<p>{"Submit user : "}</p>}></Button>  
+
+            <Input onInput={handleInput} onEvent={handleChange} inputState={userInput.usernameInput} inputType="text" name="usernameInput" labelName="Add user :" cssClassName="add-participant-username-input" />
+
+
+            <Button onClick={(e) => {
+                e.preventDefault(); e.stopPropagation(); if (userInput.usernameInput && !(participantInputDataList.filter((participant) => participant.username === userInput.usernameInput)[0])) {
+                    //check username-existence
+                   appFirebaseClientContext.getUserIds([userInput.usernameInput]).then((userId) => {
+
+                        return userId[0];
+                    }).then((userId) => {
+                        const isSuccess = (userId !== null);
+
+                        if (isSuccess) {
+                            onSubmitUser(userInput.usernameInput, [userInput.userTypeInput], userId); 
+                            setSelectedUsername(userInput.usernameInput);
+                        }
+                        else {
+                            alert(`${userInput.usernameInput} was not found in our database, please try again!`)
+                        }
+                    }).catch((error: Error) => {
+                        console.log(error);
+                    }).finally(() => resetInputFields(setUserInput));
+                }
+            }} id="submit-user-button" cssClassName="participant-input-button">
+                <p>{"Add :"}</p>
+            </Button>
+
         </>);
+
+        userTypeButtons = (<> <Button onClick={(e) => {
+            e.preventDefault(); e.stopPropagation();
+            //Check wheter the userType-array has been initialized, if so compare input to see the type is not already included
+
+
+            if (userInput.userTypeInput.trim() !== "" && !selectedUser.userType.includes(userInput.userTypeInput)) {
+                handleOnAddUserTypeClick({ usernameInput: selectedUsername, userTypeInput: userInput.userTypeInput }, setUserInput)
+            }
+        }} id="usertype-add-button" cssClassName="participant-input-button">
+            <p>{"+"}</p>
+        </Button>
+            <Button onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                if (userInput.userTypeInput.trim() !== "" && selectedUser.userType.includes(userInput.userTypeInput)) {
+                    handleOnRemoveUserTypeClick({ usernameInput: selectedUsername!, userTypeInput: userInput.userTypeInput }, setUserInput)
+                }
+            }}
+                id="usertype-remove-button" cssClassName="participant-input-button" children={(<p>{"-"}</p>)} /> </>)
     }
     else {
-        const [userInput, setUserInput] = React.useState({ usernameInput: "" });
         handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
-
+            e.stopPropagation();
 
             setUserInput((prev) => ({
                 usernameInput: e.target.value
@@ -228,50 +286,190 @@ function ParticipantInput({ participantInputDataList }: ParticipantInputProps) {
 
 
         handleInput = (event: React.FormEvent<HTMLInputElement>) => {
+            event.stopPropagation();
             setUserInput((prev) => ({
                 usernameInput: event.target.value
             }));
         };
         inputElement = (<>
+
             <Input onInput={handleInput} onEvent={handleChange} inputState={userInput.usernameInput} inputType="text" name="usernameInput" labelName="Enter username :" cssClassName="add-client-username-input" />
+            <Button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (userInput.usernameInput) {
+                         appFirebaseClientContext.getUserIds([userInput.usernameInput]).then((userId) => {
+
+                        return userId[0];
+                    }).then((userId) => {
+                        const isSuccess = (userId !== null);
+
+                        if (isSuccess) {
+                           onSubmitUser(userInput.usernameInput, undefined, userId); 
+                           setSelectedUsername(userInput.usernameInput); 
+                           setUserInput({ usernameInput: "" });
+                        }
+                        else {
+                            alert(`${userInput.usernameInput} was not found in our database, please try again!`)
+                        }
+                    }).catch((error: Error) => {
+                        console.log(error);
+                    })
+                 } }} id="submit-user-button" cssClassName="participant-input-button">
+                <p>{"Add :"}</p>
+            </Button>
         </>);
+
+
+
+    }
+    let keys: Key[] = new Array<Key>(participantInputDataList.length);
+    for (let i = 0; i < keys.length; i++) {
+
+        keys[i] = self.crypto.randomUUID();
     }
 
-let listEntries = participantInputDataList.map((participantInputData) => {
 
-    if (Object.keys(participantInputData).length < 2) {
-        if (participantInputData.username.trim() !== "") {
-            //Means we have client input and should only show username
-            return (
-                <li>{`Username : ${participantInputData.username} `}</li>
-            )
+
+    let listEntries = participantInputDataList.map((participantInputData, index) => {
+
+        if (Object.keys(participantInputData).length === 2) {
+            if (participantInputData.username.trim() !== "") {
+                //Means we have client input and should only show username
+                return (
+
+                    < option key={keys[index]} value={participantInputData.username}>{`Username : ${participantInputData.username}`} </option>
+
+                )
+            }
         }
-    }
-    else {
-        if (participantInputData.username.trim() !== "") {
-            return (
-                <li>{`Username : ${participantInputData.username} | User-types : ${participantInputData.userTypes}`}</li>
+        else {
+            if (participantInputData.username.trim() !== "") {
+                return (
 
-
-            )
+                    <option key={keys[index]} value={participantInputData.username}>{`Username : ${participantInputData.username} | User-types : ${participantInputData.userType}`}</option>
+                )
+            }
         }
-    }
-});
+    });
+    let selectedUser = participantInputDataList.filter((participant) => participant.username === selectedUsername)[0];
+    let userTypeOptions = (<></>)
+    if (Object.keys(participantInputDataList[0]).length > 2 && selectedUser) {
+        let keysForUserTypeOptions = new Array<Key>(selectedUser.userType.length);
+        for (let i = 0; i < keysForUserTypeOptions.length; i++) {
+            keysForUserTypeOptions[i] = self.crypto.randomUUID();
+        }
+        let counter = 0;
+        userTypeOptions = selectedUser.userType.map((usertype, index) => {
 
-return (
-    <Fragment>
-        {( listEntries[0]!==(undefined)) &&
+
+
+
+            return (
+              
+                < option key={keysForUserTypeOptions[index]} value={usertype}></option>
+            )
+
+
+
+        });
+    }
+
+    //The list where you can handle already added users
+    listElement = (<details>
+        <summary >{"Added participants : "}</summary>
+        <label htmlFor="added-users-select">{"Selected user :"}</label>
+
+        <select value={selectedUsername} onChange={(e) => { e.stopPropagation(); (setSelectedUsername(e.target.value)); selectedUser = participantInputDataList.filter((participant) => participant.username === e.target.value)[0]; }} id="added-users-select">
+
+            {listEntries}
+        </select>
+
+        <Button isDisabled={false} onClick={(e) => {
+            e.preventDefault(); e.stopPropagation();
+
+            handleRemoveUserClick();
+
+        }} cssClassName="participant-input-button" children={(<p>{"Remove user with username from list"}</p>)}
+        />
+        {Object.keys(participantInputDataList[0]).length > 2 &&
             <>
-                <p>{"Added participants : "}</p>
-                <ol>
+                <Input list="selected-user-usertypes" onEvent={handleChange} onInput={handleInput} inputState={userInput.userTypeInput} inputType="text" name="userTypeInput" labelName="Add/remove user-type :" cssClassName="add-participant-usertype-input" />
 
-                    {listEntries}
-                </ol></>}
+                <datalist id="selected-user-usertypes">
+                    {userTypeOptions}
+                </datalist>
+                {userTypeButtons}
+            </>}
+    </details>)
 
-       {inputElement}
-    </Fragment>
-)
 
-    
+    return (
+        <Fragment>
+            <Background cssClassName="participant-input-container">
+                {(listEntries[0] !== (undefined)) &&
+                    listElement
+                }
+                {inputElement}
+            </Background>
+        </Fragment >
+    );
+
+
+    function handleRemoveUserClick() {
+
+        onRemoveUser(selectedUsername!);
+
+
+
+    }
+
+    function handleOnRemoveUserTypeClick(userInput: { usernameInput: string; userTypeInput: string; }, setUserInput: React.Dispatch<React.SetStateAction<{ usernameInput: string; userTypeInput: string; }>>): React.MouseEventHandler<HTMLButtonElement> {
+        if (userInput.userTypeInput && userInput.usernameInput) {
+            onRemoveUserType!(userInput.usernameInput, userInput.userTypeInput);
+            resetInputFields(setUserInput, "userTypeInput");
+        }
+
+    }
+
+    function handleOnAddUserTypeClick(userInput: { usernameInput: string; userTypeInput: string; }, setUserInput: React.Dispatch<React.SetStateAction<{ usernameInput: string; userTypeInput: string; }>>): React.MouseEventHandler<HTMLButtonElement> {
+
+        if (userInput.userTypeInput && userInput.usernameInput) {
+            onAddUserType!(userInput.usernameInput, userInput.userTypeInput); resetInputFields(setUserInput, "userTypeInput");
+        }
+
+    }
+
+    /**
+     * Sets one or both user inputs of username and userType to ""
+     * 
+     * @param setUserInput The setter function of the input variables
+     * @param fieldOption The specific field to be reset, if fieldOption is left out both fields are reset
+     */
+    function resetInputFields(setUserInput: React.Dispatch<React.SetStateAction<{ usernameInput: string; userTypeInput: string; }>>, fieldOption?: "usernameInput" | "userTypeInput") {
+
+
+        const fieldOptionIsDefined = (fieldOption) ? true : false;
+
+        switch (fieldOptionIsDefined) {
+            case false: {
+                //No field option specified -> Means both fields should be reset
+
+                setUserInput({ usernameInput: "", userTypeInput: "" });
+            }
+
+                break;
+
+            default: {
+
+                setUserInput((prevState) => {
+                    return ({
+                        ...prevState,
+                        [fieldOption!]: ""
+                    });
+                });
+            }
+                break;
+        }
+    }
 
 }
+
+

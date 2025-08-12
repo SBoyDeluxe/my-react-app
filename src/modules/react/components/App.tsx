@@ -26,6 +26,8 @@ import { LoadingStore, useLoadingStore } from './LoadingStore';
 import { Project } from '../../project';
 import { TimeConstraints } from '../../Timeconstraints';
 import { start } from 'repl';
+import { firebaseClientContext } from '../context/ClientContext';
+import { ClientInputData, ParticipantInputData } from './reducers/ParticipantInputReducer';
 
 
 /**
@@ -85,11 +87,12 @@ function catchError<T>(promise: Promise<T>): Promise<(T | undefined)[] | [Error]
 
 export function App({ firebaseClient }: AppProps): React.ReactNode {
         const appThemeContext = React.useContext(themeContext);
+        const appFirebaseClientContext = React.useContext(firebaseClientContext);
         const loadingStore = useLoadingStore();
         const userStore = useUserStore();
-       
 
-   
+
+
         const navigate = useNavigate();
         //When a change in the user-state happens we now someone have logged in, signed up or logged out <=> logged out/not logged in yet : userStore === null
         // || logged-in/signed-up <=> userStore !== null && loadingStore ==false
@@ -145,25 +148,80 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
 
         }
 
-        function createProject(
-                projectTitle: string,
-                projectDescription: string,
-                projectStartTime: string,
-                projectEndTime: string,
-                projectManagers: string,
-                projectDevelopers: string,
-                projectClients: string,
-        ) {
+        function createProject({ projectDescription, projectTitle, }: {
+    projectTitle: string;
+    projectDescription: string;
+}, { projectClients, projectDevelopers, projectManagers }: {
+    projectDevelopers: ParticipantInputData[];
+    projectManagers: ParticipantInputData[];
+    projectClients: ClientInputData[];
+}, { projectEndTime, projectStartTime }: {
+    projectStartTime: string;
+    projectEndTime: string;
+}): void{
 
                 LoadingStore.updateLoading();
                 //Maps project devs, managers and clients in accordance with the format specified in the create project-form
-                 handleProjectCreationAsync(projectClients, projectStartTime, projectEndTime, projectTitle, projectDescription, projectManagers, projectDevelopers);
+                //The following should be known : Project always has at least 1 manager, all users added (inputData !== {"", ""|undefined, -1}) are verified users with userids
+                //Everything else must be checked -> startDate < endDate, endDate >=today, startDate, currentUser included in developers || managers (clientUsers can only be invited)
+                //projectTitle !== "" && projectDescription !== ""
+                //  handleProjectCreationAsync(projectClients, projectStartTime, projectEndTime, projectTitle, projectDescription, projectManagers, projectDevelopers);
+                //        const startDate = TimeConstraints.getLocalTimeParameters( new Date(projectStartTime));
+                //        const endDate = TimeConstraints.getLocalTimeParameters( new Date(projectEndTime));
+                //        const todaysDate = TimeConstraints.getLocalTimeParameters(new Date(Date.now())) ;
+                const currentUser = userStore;
+                const currentUserAsInput = { username: currentUser?.username.username, userId: currentUser?.authParameters.userId }
+                const allVariablesExist = (projectTitle.trim() !== "") && (projectDescription.trim() !== "") && (projectStartTime.trim() !== "") && (projectEndTime.trim() !== "") && (projectManagers.length >= 1)
+                        && ((projectManagers.filter((manager) => (manager.username === currentUserAsInput.username && manager.userId === currentUserAsInput.userId))[0] !== undefined) ||
+                                (projectDevelopers.filter(dev => (dev.username === currentUserAsInput.username && dev.userId === currentUserAsInput.userId))[0]!==undefined));
+                if (allVariablesExist) {
+                        const startDate = new Date(projectStartTime);
+                        const endDate = new Date(projectEndTime);
+                        const todaysDate = new Date(Date.now());
+
+
+                        const datesAreValid = ((endDate.getTime() >= startDate.getTime()) && (endDate.getTime() >= todaysDate.getTime()));
+
+                        if(datesAreValid){
+                                //All variables are valid -> We can now start construction of the project parameters
+                                const timeConstraints = new TimeConstraints(startDate, endDate);
+
+                                const managers = projectManagers.map((manager)=>{
+
+                                        return new Manager(manager.userId, manager.username, manager.userType);
+                                });
+                                const developersExist = (projectDevelopers.filter((dev)=>dev.userId!==-1)[0]!==undefined)
+                                const developers =developersExist ? projectDevelopers.map((developer)=>{
+
+                                        return new Developer(developer.userId, developer.username, developer.userType);
+                                }) 
+                                : null;
+
+                                const clientsExist = (projectClients.filter((client) => (client.userId === -1 && client.username === ""))[0] === undefined);
+
+                                const clients = (clientsExist) ? (projectClients.map((client)=>new Client(client.username, client.userId))) : null;
+                                const userIds = (clientsExist) ? projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId).concat(clients!.map((client)=>client.userId)) 
+                                : projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId);
+
+
+                                const project =  new Project(projectTitle, managers, clients, null, developers, projectDescription, timeConstraints );
+                                
+                                firebaseClient.createProject(project, userIds ).then(()=>{
+
+                                        LoadingStore.updateLoading();
+                                        alert("Project created!");
+                                        console.log(project);
+                                }).catch((error : Error) =>console.log(error));
+                                
+
+                        }
+                }
         }
 
 
         const [loginToggle, setLoginToggle] = React.useState(initToggle);
         const [theme, setTheme] = React.useState(initTheme);
-      
+
 
 
 
@@ -195,7 +253,7 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
                 }
         }, [theme]);
 
-      
+
 
         // const projectState: State<{
         //         projectTitle: string;
@@ -217,27 +275,29 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
          */
 
         return (<>
-                <themeContext.Provider value={theme}>
-                <Routes >
-                        <Route  path='/' element={
-                                <>
-                                <LoginRegistrationPage    formState={formState} loading={loadingStore} login={login} loginToggle={loginToggle} setFormState={setFormState} setLoginToggle={setLoginToggle} signUp={signUp} themeState={themeState} >
+                <firebaseClientContext.Provider value={firebaseClient}>
+                        <themeContext.Provider value={theme}>
+                                <Routes >
+                                        <Route path='/' element={
+                                                <>
+                                                        <LoginRegistrationPage formState={formState} loading={loadingStore} login={login} loginToggle={loginToggle} setFormState={setFormState} setLoginToggle={setLoginToggle} signUp={signUp} themeState={themeState} >
 
-                                </LoginRegistrationPage>
-                                </>
-                        }>
-                                
-                        </Route>
-                        <Route  path='/logged-in' element={
+                                                        </LoginRegistrationPage>
+                                                </>
+                                        }>
 
-                                <LoggedInPage    createProject={createProject}  loading={loadingStore} userState={userStore}  theme={theme} themeState={themeState} >
+                                        </Route>
+                                        <Route path='/logged-in' element={
 
-                                </LoggedInPage>
+                                                <LoggedInPage createProject={createProject} loading={loadingStore} userState={userStore} theme={theme} themeState={themeState} >
 
-                        }></Route>
-                </Routes>
-               </themeContext.Provider>         
-                        </>
+                                                </LoggedInPage>
+
+                                        }></Route>
+                                </Routes>
+                        </themeContext.Provider>
+                </firebaseClientContext.Provider>
+        </>
 
 
 
@@ -246,9 +306,12 @@ export function App({ firebaseClient }: AppProps): React.ReactNode {
         );
 
 
+        function handleProjectCreation() {
 
 
-         async function handleProjectCreationAsync(projectClients: string, projectStartTime: string, projectEndTime: string, projectTitle: string, projectDescription: string, projectManagers: string, projectDevelopers: string) {
+        }
+
+        async function handleProjectCreationAsync(projectClients: string, projectStartTime: string, projectEndTime: string, projectTitle: string, projectDescription: string, projectManagers: string, projectDevelopers: string) {
                 const managers = mapProjectManagers();
                 const devs = mapProjectDevs();
                 const clientUsernames = projectClients.trim().split(",");

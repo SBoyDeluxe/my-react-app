@@ -34,12 +34,12 @@ export class TimeConstraints{
     private _completiondate: Date|null = null;
     public get completiondate(): string|null{
            if (this._completiondate) {
-                let completiontYear = this._completiondate.getFullYear();
-    let completiontMonth = this._completiondate.getMonth();
-    let completiontDay = this._completiondate.getDate();
-    let completiontHours = this._completiondate.getHours();
-    let completiontMinutes = this._completiondate.getMinutes();
-        return `${completiontYear} - ${completiontMonth} - ${completiontDay} - ${completiontHours} - ${completiontMinutes} `;
+                let completionYear = this._completiondate.getFullYear();
+    let completionMonth = this._completiondate.getMonth();
+    let completionDay = this._completiondate.getDate();
+    let completionHours = this._completiondate.getHours();
+    let completionMinutes = this._completiondate.getMinutes();
+        return `${completionYear} - ${completionMonth} - ${completionDay} - ${completionHours} - ${completionMinutes} `;
     } else {
         return null
     }
@@ -77,6 +77,34 @@ let currentMilliseconds = new Date().getMilliseconds();
 let utcTimestamp = Date.UTC(currentYear, currentMonth, currentDay, currentHours, currentMinutes, currentSeconds, currentMilliseconds);
     this._completiondate = new Date(utcTimestamp);
    
+}
+/**
+ * 
+ * @param inDate The date to be converted into UTC-parameters (day, year....)
+ * @returns UTCParameters - Ex : year : 2025, month : 8, day : 12....
+ */
+public static getLocalTimeParameters(inDate : Date){
+
+
+const dateYear = inDate.getFullYear();
+const dateMonth = inDate.getMonth();
+const dateDay = inDate.getDate();
+const dateHours = inDate.getHours();
+const dateMinutes = inDate.getMinutes();
+const dateSeconds = inDate.getSeconds();
+const dateMilliseconds = inDate.getMilliseconds();
+
+return {
+    year : dateYear,
+    month : dateMonth,
+    day : dateDay, 
+    hour : dateHours,
+    minutes : dateMinutes,
+    seconds : dateSeconds,
+    miliSeconds :dateMilliseconds
+
+
+}
 }
 
 }

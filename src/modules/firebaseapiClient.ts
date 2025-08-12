@@ -79,8 +79,7 @@ export class FirebaseAPIClient {
 
             const encryptedData = await CryptoUtilObject.encrypt(JSON.stringify(data), publicKey, true);
             console.log(encryptedData);
-
-            return CryptoUtilObject.encodeBase64(`${encryptedData[1].toString()}`);
+            return CryptoUtilObject.encodeBase64(`${encryptedData[1]}`);
         }).then((encryptedDataAsBase64) => {
             const mailToUrl = FirebaseURLBuilder.getEndpointURL(`mailbox/${userId}`);
 
@@ -224,11 +223,7 @@ export class FirebaseAPIClient {
 
             console.log(eventsrc);
             console.log(ev);
-            //Becuase of send mail-function, its always done using POST -> Always a put and never a repeating path
-            //Make reg ex to only select data <=> ?<= : Look ahead ; ?! Look behind ;  (?=Y) positive look ahead, only takes strings that follows  a capital Y ; (?!Y), only allows strings that are not precedeed by Y. 
-            //    const regExp = /(?<=:{\").*(?=((\",)\"publicWebKey\"))/g;
-
-            //   const encryptedData = ((eventsrc.data as string).trim().match(regExp));
+          
 
             const contents = JSON.parse(eventsrc.data).data;
             delete contents.publicWebKey;
@@ -243,7 +238,7 @@ export class FirebaseAPIClient {
                     return CryptoUtilObject.decrypt(encrypedData, privKey, null, true);
                 });
 
-                resolve(await Promise.all(result))
+                resolve(await Promise.all(result)).then((result))
 
             });
 
@@ -277,9 +272,12 @@ export class FirebaseAPIClient {
      * @see  | {@linkcode FirebaseAPIClient.getUserIds} |
      */
     async createProject(project: Project,  userIds?: number[]) {
-        const projectKeyObject = project.projectKeyObject;
-        const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${project.projectKeyObject.projectIndex}.json`);
-        const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(`projectupdate/${project.projectKeyObject.projectIndex}.json`);
+
+       const hashVal = await project.hash;
+      
+        const projectKeyObject = await project.projectKeyObject;
+        const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
+        const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(`projectupdate/${projectKeyObject.projectIndex}.json`);
 
 
 
@@ -305,9 +303,8 @@ export class FirebaseAPIClient {
         });
 
         //To notify any user to changes in their projects we use a hash-value, since Event-source is limited in many browser to 6 or less at any given time
-        const hash = CryptoUtilObject.createHash(JSON.stringify(projectData));
 
-        fetch(projectUpdateTableUrl, FirebaseURLBuilder.generateOptions("PUT", hash)).then((response) => {
+        fetch(projectUpdateTableUrl, FirebaseURLBuilder.generateOptions("PUT", hashVal)).then((response) => {
 
             console.log(response)
             if (!response.ok) {
@@ -322,7 +319,7 @@ export class FirebaseAPIClient {
 
         if (userIds) {
 
-            userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${project.projectKeyObject.projectIndex}:${project.projectKeyObject.projectKey}` }) })
+            userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${projectKeyObject.projectIndex}:${projectKeyObject.projectKey}` }) })
         }
 
 
@@ -405,7 +402,7 @@ export class FirebaseAPIClient {
                 return response.json();
             }
             else {
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - createProject-function in FirebaseAPIClient`);
+                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - getUserIds-function in FirebaseAPIClient`);
 
             }
 
