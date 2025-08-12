@@ -9,8 +9,7 @@ import { Background } from "./background";
 import { ClientInputData, ParticipantInputData, useParticipantReducer } from "./reducers/ParticipantInputReducer";
 
 import { ApplicationConfiguration } from "../application_config";
-import { UserStore } from "../store/UserStore";
-import { firebaseClientContext } from "../context/ClientContext";
+import { firebaseClientContext, UserStore } from "../store/UserStore";
 export type CreateProjectTabProps = {
 
     createProjectState: {

@@ -3,6 +3,7 @@ import { CryptoUtilObject } from "./Cryptography_Util";
 import { Feature } from "./feature";
 import { Project } from "./project";
 import { Mail, MailBox } from "./mailbox";
+import { FirebaseAPIClient } from "./firebaseapiClient";
 
 
 /**
@@ -15,9 +16,8 @@ export class Username {
 
     constructor(usernameIn: string) {
         this.username = usernameIn;
-
     }
-
+ 
 }
 
 
@@ -90,8 +90,20 @@ export type AuthParameters = {
     wrappedUserTableEncryptionKey: ArrayBuffer,
 
     ivWrappedUserTableEncryptionKey: ArrayBuffer, 
-
+    /**
+     * The key to wrap everything with at logout
+     * 
+     * @see 
+     * | {@link FirebaseAPIClient.logOut}|
+     */
     nextKey : {nextKey : CryptoKey, nextSalt : Uint8Array<ArrayBuffer>},
+    /**
+     * The hash val of the latest read of, or update by, user to their associated projects.
+     *  Is compared to hashValue under /projectupdate/<projectindex>.json in firebase to see if user has latest version of a given project
+     * @memberof AuthParameters
+     * @returns Map<string, string> = {<projectIndex> : <hash>}
+     */
+    associatedProjectHashValues : Map<string, string> | null;
 
 
 }
@@ -122,8 +134,9 @@ export class User {
      */
     password: Password;
     /**
-     * An object to hold any parameters only 
+     * An object that holds privileged user specific information : Keys, project indices and hashes etc
      * @memberof User
+     * @see  | {@link AuthParameters}|
      */
     authParameters: AuthParameters;
     /**
@@ -153,6 +166,29 @@ export class User {
         this.mailbox = mailbox;
 
 
+
+    }
+    /**
+     * Adds a computed hash value of a project to the users authParameters
+     * 
+     * @param projectIndexHashKeyValuePair - {projectIndex : projectHash}
+     * 
+     */
+    setHashVal(projectIndex : string, projectHash : string){
+        const projectHashIndexPairs = this.authParameters.associatedProjectHashValues;
+            if(projectHashIndexPairs){
+                //If instantiated <=> We can just set the values
+
+                projectHashIndexPairs?.set(projectIndex, projectHash);
+
+
+            }
+            else{
+
+                this.authParameters.associatedProjectHashValues = new Map<string, string>();
+                this.authParameters.associatedProjectHashValues.set(projectIndex, projectHash);
+
+            }
 
     }
 

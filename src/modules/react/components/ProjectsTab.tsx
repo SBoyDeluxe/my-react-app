@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from "react";
 import { User } from "../../User";
+import { UserStore } from "../store/UserStore";
 
 
 export type ProjectsTabProp = {
@@ -10,5 +12,9 @@ export type ProjectsTabProp = {
 }
 
 export function ProjectsTab(){
+
+    const userStore = useSyncExternalStore(UserStore.subscribe, UserStore.getSnapshotUser);
+
+    const mailBox = userStore?.mailbox;
 
 }

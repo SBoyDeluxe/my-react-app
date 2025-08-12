@@ -5,6 +5,7 @@ import { Password, User, Username } from "./User";
 import { Mail, MailBox, MailContent } from "./mailbox";
 import { Project, ProjectKeyObject } from "./project";
 import { createPublicKey } from "crypto";
+import { firebaseClient } from "./react/store/UserStore";
 /**
  * FirebaseAPIClient handles the interaction and CRUD-operations between the web-application and the Firebase Realtime Data using the Firebase REST API
  * 
@@ -49,7 +50,7 @@ export class FirebaseAPIClient {
 
     }
     /**
-     * Creates a mailbox under /mailbox/userId 
+     * Sends mail to the user with the specified userId
      *  
      * @param userId 
      * @param data  
@@ -92,7 +93,7 @@ export class FirebaseAPIClient {
                 }
             });
 
-        });
+        }).catch((error:Error)=>{throw error});
 
 
     }
@@ -112,10 +113,10 @@ export class FirebaseAPIClient {
         const hashes = new Array(projectHashesAndKeyObjects.length);
         const indices = new Array(projectHashesAndKeyObjects.length);
 
-        projectHashesAndKeyObjects.map((value, index) => {
+        projectHashesAndKeyObjects.map(async (value, index) => {
 
-            hashes[index] = value.hash;
-            indices[index] = value.projectKeyObject.projectIndex;
+            hashes[index] = await value.hash;
+            indices[index] = await (await value.projectKeyObject).projectIndex;
 
 
         });
@@ -238,10 +239,11 @@ export class FirebaseAPIClient {
                     return CryptoUtilObject.decrypt(encrypedData, privKey, null, true);
                 });
 
-                resolve(await Promise.all(result)).then((result))
+                resolve(await Promise.all(result))
 
             });
 
+            
 
 
 
@@ -251,6 +253,7 @@ export class FirebaseAPIClient {
 
 
 
+            console.log(decryptedContents);
             mailbox.setContents(await decryptedContents);
 
         }, false);
@@ -317,10 +320,12 @@ export class FirebaseAPIClient {
 
         );
 
+        this.currentUser?.setHashVal(projectKeyObject.projectIndex, hashVal);
         if (userIds) {
 
-            userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${projectKeyObject.projectIndex}:${projectKeyObject.projectKey}` }) })
+            await userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${projectKeyObject.projectIndex}:${Object.entries(projectKeyObject.projectKey)}` }) })
         }
+
 
 
 
@@ -643,6 +648,7 @@ export class FirebaseAPIClient {
                     //Should be given upon unwrapping
                     ivWrappedUserTableEncryptionKey: iv,
                     nextKey: { nextKey: futureKey, nextSalt: futureSalt },
+                    associatedProjectHashValues : null
                 }, new MailBox(userPublicMailboxKey, [""], null, fbClient));
                 //We encrypt the userprofile with the unwrapped userProfileKey - The password.salt must be posted unencrypted before the user-base64string, so that we can see if we can unwrap the aesgcmkey
                 const unwrappedProfileKey = await CryptoUtilObject.unwrapKey(userProfileKey, passwordKey, iv as Uint8Array, false);
@@ -864,7 +870,7 @@ export class FirebaseAPIClient {
          */
         function instantiateUser(user: User, firebaseApiClient: FirebaseAPIClient,currentUserKey : CryptoKey ,futureUserKey: CryptoKey, futureSalt: Uint8Array<ArrayBuffer>) {
             //Eventsource always null when deserializing, instantiated per session via this.setMailboxListener()
-            user = new User(user.username.username, new Password(currentUserKey, user.password.salt), { nextKey: { nextKey: futureUserKey, nextSalt: futureSalt }, ivPrivKey: user.authParameters.ivPrivKey, userId: user.authParameters.userId, ivWrappedUserTableEncryptionKey: user.authParameters.ivWrappedUserTableEncryptionKey, mailboxPrivKey: user.authParameters.mailboxPrivKey, publicMailboxKey: user.authParameters.publicMailboxKey, wrappedUserTableEncryptionKey: user.authParameters.wrappedUserTableEncryptionKey }, new MailBox(user.mailbox.publicKey, user.mailbox.contents, null, firebaseApiClient));
+            user = new User(user.username.username, new Password(currentUserKey, user.password.salt), { nextKey: { nextKey: futureUserKey, nextSalt: futureSalt }, ivPrivKey: user.authParameters.ivPrivKey, userId: user.authParameters.userId, ivWrappedUserTableEncryptionKey: user.authParameters.ivWrappedUserTableEncryptionKey, mailboxPrivKey: user.authParameters.mailboxPrivKey, publicMailboxKey: user.authParameters.publicMailboxKey, wrappedUserTableEncryptionKey: user.authParameters.wrappedUserTableEncryptionKey, associatedProjectHashValues : user.authParameters.associatedProjectHashValues }, new MailBox(user.mailbox.publicKey, user.mailbox.contents, null, firebaseApiClient));
             console.log(user);
             return user;
         }
@@ -888,7 +894,7 @@ export class FirebaseAPIClient {
             {
                 ivPrivKey: mailBoxPrivKeyIv, mailboxPrivKey: mailboxPrivKey, ivWrappedUserTableEncryptionKey: userTableEntryEncryptionKeyIv,
                 publicMailboxKey: this.currentUser?.authParameters.publicMailboxKey!,
-                userId: this.currentUser?.authParameters.userId, wrappedUserTableEncryptionKey: userTableEntryEncryptionKey
+                userId: this.currentUser?.authParameters.userId, wrappedUserTableEncryptionKey: userTableEntryEncryptionKey, associatedProjectHashValues : this.currentUser?.authParameters.associatedProjectHashValues!
             }, this.currentUser?.mailbox);
 
         //Encryption and base64-encoding

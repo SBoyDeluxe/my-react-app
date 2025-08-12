@@ -21,12 +21,12 @@ import { LoginRegistrationPage } from '../pages/LoginRegistrationPage';
 import { BrowserRouter, Link, Route, Routes, useNavigate } from "react-router-dom"
 import { TabRow } from './TabRow';
 import { LoggedInPage } from '../pages/LoggedInPage';
-import { UserStore, useUserStore } from '../store/UserStore';
+import { firebaseClientContext, UserStore, useUserStore } from '../store/UserStore';
 import { LoadingStore, useLoadingStore } from './LoadingStore';
 import { Project } from '../../project';
 import { TimeConstraints } from '../../Timeconstraints';
 import { start } from 'repl';
-import { firebaseClientContext } from '../context/ClientContext';
+
 import { ClientInputData, ParticipantInputData } from './reducers/ParticipantInputReducer';
 
 
@@ -85,9 +85,9 @@ function catchError<T>(promise: Promise<T>): Promise<(T | undefined)[] | [Error]
         })
 }
 
-export function App({ firebaseClient }: AppProps): React.ReactNode {
+export function App({  }: AppProps): React.ReactNode {
         const appThemeContext = React.useContext(themeContext);
-        const appFirebaseClientContext = React.useContext(firebaseClientContext);
+        const firebaseClient = React.useContext(firebaseClientContext);
         const loadingStore = useLoadingStore();
         const userStore = useUserStore();
 

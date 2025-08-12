@@ -10,7 +10,9 @@ import { BrowserRouter } from 'react-router';
 let container = document.getElementById("app")!;
 let root = createRoot(container);
 
-
+//firebaseClient.signUp("hej", "hej");
+//firebaseClient.signUp("ja", "ja");
+//firebaseClient.signUp("gif", "gif");
 root.render(
   <StrictMode>
     <BrowserRouter>
