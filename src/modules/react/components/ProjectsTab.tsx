@@ -4,7 +4,7 @@ import { firebaseClientContext, ProjectStore, UserStore } from "../store/UserSto
 import { Project } from "../../project";
 import { LoadingStore, useLoadingStore } from "./LoadingStore";
 import { Background } from "./background";
-import { themeContext } from "../context/ThemeContext";
+import { themeContext } from "../store/ThemeStore";
 import { ProgressBar } from "./ProgressBar";
 import { TimeConstraints } from "../../Timeconstraints";
 import { FieldSetOptions, Form } from "./Form";

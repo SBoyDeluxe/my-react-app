@@ -7,7 +7,7 @@ import { Footer } from "../components/Footer";
 import { Header, HeaderProps } from "../components/Header";
 import { InboxTab } from "../components/InboxTab";
 import { ThemeSelector } from "../components/ThemeSelector";
-import { themeContext } from "../context/ThemeContext";
+import { themeContext } from "../store/ThemeStore";
 import { Button } from "../components/Button";
 import { MailboxStore, UserStore } from "../store/UserStore";
 import { TabPage } from "../components/TabPage";

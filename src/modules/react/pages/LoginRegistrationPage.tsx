@@ -5,7 +5,7 @@ import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { LoginForm } from "../components/LoginForm";
 import { ThemeSelector } from "../components/ThemeSelector";
-import { themeContext } from "../context/ThemeContext";
+import { themeContext } from "../store/ThemeStore";
 
 
 

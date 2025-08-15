@@ -5,7 +5,6 @@ import * as React from 'react';
 import { renderColors } from './RenderColors';
 import { Button, ButtonProps } from './Button';
 import { Background } from './background';
-import { themeContext } from '../context/ThemeContext'
 import { LoginForm } from './LoginForm';
 import { ToggleButton } from './ToggleButton';
 import { CSSProperties, useMemo } from 'react';
@@ -28,6 +27,7 @@ import { TimeConstraints } from '../../Timeconstraints';
 import { start } from 'repl';
 
 import { ClientInputData, ParticipantInputData } from './reducers/ParticipantInputReducer';
+import { themeContext, useThemeStore } from '../store/ThemeStore';
 
 
 /**
@@ -90,6 +90,7 @@ export function App({  }: AppProps): React.ReactNode {
         const firebaseClient = React.useContext(firebaseClientContext);
         const loadingStore = useLoadingStore();
         const userStore = useUserStore();
+        const themeStore = useThemeStore();
 
 
 
@@ -208,7 +209,7 @@ export function App({  }: AppProps): React.ReactNode {
 
         return (<>
                 <firebaseClientContext.Provider value={firebaseClient}>
-                        <themeContext.Provider value={theme}>
+                        <themeContext.Provider value={themeStore}>
                                 <Routes >
                                         <Route path='/' element={
                                                 <>

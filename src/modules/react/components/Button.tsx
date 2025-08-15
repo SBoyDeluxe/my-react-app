@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import { themeContext } from "../context/ThemeContext";
 import React from "react";
+import { themeContext } from "../store/ThemeStore";
 
 export type ButtonProps = {
             /**

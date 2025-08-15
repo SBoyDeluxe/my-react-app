@@ -1,7 +1,7 @@
 import { useContext } from "react"
 import { Header, HeaderProps } from "./Header"
 import { TabRow, TabRowProps } from "./TabRow"
-import { themeContext } from "../context/ThemeContext"
+import { themeContext } from "../store/ThemeStore";
 
 
 export type TabPageProps = {

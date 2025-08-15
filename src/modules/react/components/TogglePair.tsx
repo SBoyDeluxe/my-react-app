@@ -1,5 +1,5 @@
 import { CSSProperties, useContext, MouseEventHandler } from "react"
-import { themeContext } from "../context/ThemeContext"
+import { themeContext } from "../store/ThemeStore";
 import { ToggleButton } from "./ToggleButton";
 import React from "react";
 import { ClickHandler, State } from "./App";

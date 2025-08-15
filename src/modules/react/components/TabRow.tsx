@@ -2,7 +2,7 @@ import { CSSProperties, Key, useContext } from "react"
 import { State } from "./App"
 import { Button } from "./Button"
 import { ToggleButton } from "./ToggleButton"
-import { themeContext } from "../context/ThemeContext"
+import { themeContext } from "../store/ThemeStore";
 
 
 export type TabRowProps = {

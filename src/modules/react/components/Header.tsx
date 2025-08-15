@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { ApplicationConfiguration } from "../application_config"
 import { Background } from "./background"
-import { themeContext } from "../context/ThemeContext";
+import { themeContext } from "../store/ThemeStore";
 
 
 

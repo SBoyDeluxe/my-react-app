@@ -1,7 +1,7 @@
 
 import { State } from "./App";
 import { Background } from "./background";
-import { themeContext } from "../context/ThemeContext";
+import { themeContext } from "../store/ThemeStore";
 import { Form } from "./Form";
 import { ToggleButton } from "./ToggleButton";
 import { TogglePair } from "./TogglePair";

@@ -1,5 +1,5 @@
 import { CSSProperties, useContext } from "react"
-import { themeContext } from "../context/ThemeContext"
+import { themeContext } from "../store/ThemeStore";
 import React from "react"
 
 export type FormProps = {
