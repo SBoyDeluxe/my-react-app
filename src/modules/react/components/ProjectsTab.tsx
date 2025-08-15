@@ -22,7 +22,7 @@ export type ProjectsTabProp = {
 }
 
 export function ProjectsTab() {
-     let keysNeededForList : Key[];
+    let keysNeededForList: Key[];
     const projectStore = useSyncExternalStore(ProjectStore.subscribe, ProjectStore.getSnapshotProjects);
     let loadingStore = useLoadingStore();
     const appThemeContext = useContext(themeContext);
@@ -46,16 +46,16 @@ export function ProjectsTab() {
 
     }
 
-    if(activeProjects !== null){
+    if (activeProjects !== null) {
 
-       const numberOfActiveProjects = activeProjects.length;
+        const numberOfActiveProjects = activeProjects.length;
 
-        keysNeededForList = new Array<Key>(numberOfActiveProjects); 
+        keysNeededForList = new Array<Key>(numberOfActiveProjects);
 
-       for(let i = 0 ; i < numberOfActiveProjects ; i++){
+        for (let i = 0; i < numberOfActiveProjects; i++) {
 
-        keysNeededForList[i] = window.crypto.randomUUID();
-       }
+            keysNeededForList[i] = window.crypto.randomUUID();
+        }
 
 
 
@@ -89,9 +89,9 @@ export function ProjectsTab() {
                                     <details>
                                         <summary> {"Features : "} </summary>
 
-                                       <AddFeaturesElement projectDevTeam={project.developerTeam} projectTimeConstraints={project.timeconstraints}>
-                                        
-                                       </AddFeaturesElement>
+                                        <AddFeaturesElement projectDevTeam={project.developerTeam} projectTimeConstraints={project.timeconstraints}>
+
+                                        </AddFeaturesElement>
 
 
                                     </details>
@@ -121,29 +121,30 @@ type AddFeaturesElementProps = {
      * Will be used to give suggestions for appropriate developers, that is, devs that belong to the project already in 
      * second hand and that has the type of the thought feature, if such a type has been set, in first hand
      */
-    projectDevTeam : Developer[]|null,
+    projectDevTeam: Developer[] | null,
     /**
      * The time constraints of the project, we do not accept features that go outside of these bounds
      */
-    projectTimeConstraints : TimeConstraints,
+    projectTimeConstraints: TimeConstraints,
 
 
 
 
-    
+
 }
 
-function AddFeaturesElement({projectDevTeam, projectTimeConstraints}:AddFeaturesElementProps) {
+function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeaturesElementProps) {
 
     const featureLegendText: ReactNode = (<><b><p>{"Add feature : "}</p></b></>);
 
-    const [addFeatureState, setAddFeatureState]  = useState({
-                featureTitleInput : "",
-                featureDescriptionInput : "",
-                featureTypeInput : "",
-                featureStartTime : "",
-                featureEndTime : "",
-                developerInput : ""
+    const [addFeatureState, setAddFeatureState] = useState({
+        featureTitleInput: "",
+        featureDescriptionInput: "",
+        featureTypeInput: "",
+        featureStartTime: "",
+        featureEndTime: "",
+        developerInput: "",
+        developersAssigned : [-1]
     });
 
     const addFeatureFieldSetOptions: FieldSetOptions = {
@@ -158,31 +159,82 @@ function AddFeaturesElement({projectDevTeam, projectTimeConstraints}:AddFeatures
         children: devAssignLegendText
     };
 
-    function handleChange(e: ChangeEvent<HTMLInputElement>){
+    //generate keys for each list item
 
-        e.stopPropagation();
+    let keys : Key[] = new Array(projectDevTeam?.length);
 
-        setAddFeatureState((prevState)=>{
-            return ({...prevState,
-            [e.target.name] : e.target.value});
-        });
+    for(let i = 0 ; i < projectDevTeam?.length ; i++){
+
+        keys[i] = window.crypto.randomUUID();
     }
 
-    function handleInput(e : React.FormEvent<HTMLInputElement>){
+    let devOptions = (addFeatureState.featureTypeInput.trim() !== "") ? projectDevTeam?.sort((devA, devB) => {
+
+        const featureTypeInput = addFeatureState.featureTypeInput;
+        //If one of them includes the input <=> Then they both can contain it or just one of them
+        if (devA.developerType.includes(featureTypeInput) || devB.developerType.includes(featureTypeInput)) {
+
+            if (devA.developerType.includes(featureTypeInput) && devB.developerType.includes(featureTypeInput)) {
+                //If both contain it, they´re rated equal
+                return 0;
+
+
+            }
+            else if (devA.developerType.includes(featureTypeInput)){
+                //Negative value means that first element should come before the second one
+                return -1;
+            }
+            else{
+
+                return 1;
+            }
+            }
+            else{
+                //If neither includes it then they are rated equal
+                return 0;
+            }
+    }
+    ).map((dev, index) => {
+
+       return (<>
+            <option value={index} key={keys[index]}> {`${dev.username} ${!(dev.developerType.includes("")) ? ` (${dev.developerType}) ` : ""}`}</option>
+        </>)
+    }) : projectDevTeam?.map((dev,index) => {
+
+       return (<>
+            <option key = {keys[index]}value={index}> {`${dev.username} ${ ` (${dev.developerType}) `}`}</option>
+        </>)
+    });
+
+
+
+    function handleChange(e: ChangeEvent<HTMLInputElement>) {
 
         e.stopPropagation();
 
-        setAddFeatureState((prevState)=>{
-
+        setAddFeatureState((prevState) => {
             return ({
-
                 ...prevState,
-                [e.target.name] : e.target.value
+                [e.target.name]: e.target.value
             });
         });
     }
 
-    function handleSubmitFeature(e : React.MouseEvent<HTMLButtonElement, MouseEvent>){
+    function handleInput(e: React.FormEvent<HTMLInputElement>) {
+
+        e.stopPropagation();
+
+        setAddFeatureState((prevState) => {
+
+            return ({
+
+                ...prevState,
+                [e.target.name]: e.target.value
+            });
+        });
+    }
+
+    function handleSubmitFeature(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -190,32 +242,59 @@ function AddFeaturesElement({projectDevTeam, projectTimeConstraints}:AddFeatures
 
     }
 
+    function handleDevSelect(e: ChangeEvent<HTMLSelectElement>){
+
+        e.stopPropagation();
+        setAddFeatureState((prevState)=>{
+           const devArray = new Array(e.target.selectedOptions.length);
+           for(let i = 0 ; i < e.target.selectedOptions.length ; i++){
+            devArray[i] = e.target.selectedOptions.item(i)?.value
+
+           }
+            return({
+                ...prevState,
+                developersAssigned : devArray
+            });
+        });
+        
+    }
+
+    function handleOnAddUserTypeClick(arg0: { usernameInput: any; userTypeInput: any; }, setUserInput: any) {
+        throw new Error("Function not implemented.");
+    }
+
+    function handleOnRemoveUserTypeClick(arg0: { usernameInput: any; userTypeInput: any; }, setUserInput: any) {
+        throw new Error("Function not implemented.");
+    }
+
     return (
         <>
             <Form cssClassName="add-feature-form" fieldSetOptions={addFeatureFieldSetOptions} >
 
-                <Input inputType="text" cssClassName="feature-title-input" labelName="Title :" name="featureTitleInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureTitleInput} >
+                <Input inputType="text" cssClassName="feature-title-input" labelName="Title :" name="featureTitleInput" onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureTitleInput} >
                 </Input>
-                <Input inputType="text" cssClassName="feature-description-input" labelName="Description :" name="featureDescriptionInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureDescriptionInput} >
+                <Input inputType="text" cssClassName="feature-description-input" labelName="Description :" name="featureDescriptionInput" onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureDescriptionInput} >
                 </Input>
-                <Input inputType="text" cssClassName="feature-type-input" labelName="Feature-type :" name="featureTypeInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureTypeInput} >
+                <Input inputType="text" cssClassName="feature-type-input" labelName="Feature-type :" name="featureTypeInput" onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureTypeInput} >
                 </Input>
 
 
             </Form>
             <Form fieldSetOptions={timeConstraintsFieldSetOptions} cssClassName="time-constraints-add-form" >
-                <Input min={Date.now().toLocaleString()} max={projectTimeConstraints.enddate} onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureStartTime} inputType="datetime-local" labelName="Start time :" name="featureStartTime" cssClassName="project-start-time-input" />
-                <Input min={Date.now().toLocaleString()} max={projectTimeConstraints.enddate} onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
+                <Input  onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureStartTime} inputType="datetime-local" labelName="Start time :" name="featureStartTime" cssClassName="project-start-time-input" />
+                <Input  onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
 
             </Form>
 
             <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions} >
 
-                <Input list="devs" cssClassName="dev-assignment-input" inputType="text" labelName="Add developers :" name="developerInput" inputState={addFeatureState.developerInput} onEvent={handleChange} onInput={handleInput} >
-                </Input>
-                <datalist id="devs">
-                   
-                </datalist>
+               
+               
+                          
+                <select value={addFeatureState.developersAssigned} onChange={(e)=>handleDevSelect(e)} multiple={true} id="devs">
+                {devOptions}
+                </select>
+                
 
 
 

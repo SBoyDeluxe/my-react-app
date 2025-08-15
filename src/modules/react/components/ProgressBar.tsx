@@ -30,10 +30,13 @@ export function ProgressBar({barColor, progress = 0} : ProgressBarProps ){
         <div style = {
             {
                 width : `${progress}%`,
-                height : `15%`,
+                height : "auto",
                 backgroundColor: barColor
             }
-        }></div>
+        }>
+                {`${Math.floor(progress)} % (time passed)`}
+
+        </div>
     )
 
 }

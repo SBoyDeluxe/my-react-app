@@ -176,7 +176,7 @@ const [projectTitleFormState, setProjectTitleFormState] = React.useState({
     
    
     return (<>
-        <Background cssClassName="login-form-container" backgroundColor={appThemeContext.secondaryBackgroundColor}>
+        <Background cssClassName="participant-form-container" backgroundColor={appThemeContext.secondaryBackgroundColor}>
            <TitleForm projectTitleFormState={projectTitleFormState} setProjectTitleFormState={setProjectTitleFormState}></TitleForm>
            <DateForm projectDateFormState={projectTimeDateFormState} setProjectDateFormState={setProjectTimeDateFormState}></DateForm>
            <ParticipantForm projectParticipantFormState={projectParticipantFormState} setProjectParticipantFormState={setProjectParticipantFormState}></ParticipantForm>
