@@ -61,14 +61,16 @@ labelName:string
 inputState : string | number | readonly string[] ,
 style? : CSSProperties
 name : string,
-list? : string
+list? : string,
+min? : string | number | undefined,
+max? : string | number | undefined
 }
 /**
  * Generates a labeled input field of the type = inputType.
  * 
  * 
  */
-export function Input({inputType, onEvent, cssClassName, labelName, inputState, onInput, name, list}:InputProps){
+export function Input({min=undefined, max=undefined,inputType, onEvent, cssClassName, labelName, inputState, onInput, name, list}:InputProps){
     let children : React.ReactNode = (<>
     </>);
     if(onEvent && onInput){
@@ -77,7 +79,7 @@ export function Input({inputType, onEvent, cssClassName, labelName, inputState, 
         
       children =  (<>
                 <label  htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input list={list} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
+                        <input min={min} max={max} list={list} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
 
                         </input>
 
@@ -87,7 +89,7 @@ export function Input({inputType, onEvent, cssClassName, labelName, inputState, 
     else if(onInput){
           children =  (<>
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
+                        <input min={min} max={max} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
 
                         </input>
 
@@ -99,7 +101,7 @@ export function Input({inputType, onEvent, cssClassName, labelName, inputState, 
 
                    children =  (<>
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input value = {inputState}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
+                        <input min={min} max={max} value = {inputState}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
 
                         </input>
 

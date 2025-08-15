@@ -9,7 +9,11 @@ import { Background } from "./background";
 import { ClientInputData, ParticipantInputData, useParticipantReducer } from "./reducers/ParticipantInputReducer";
 
 import { ApplicationConfiguration } from "../application_config";
-import { firebaseClientContext, UserStore } from "../store/UserStore";
+import { firebaseClient, firebaseClientContext, UserStore } from "../store/UserStore";
+import { LoadingStore } from "./LoadingStore";
+import { Project } from "../../project";
+import { TimeConstraints } from "../../Timeconstraints";
+import { Manager, Developer, Client } from "../../User";
 export type CreateProjectTabProps = {
 
     createProjectState: {
@@ -53,7 +57,7 @@ export type CreateProjectTabProps = {
  * The contents of the create project tab
  * 
  */
-export function CreateProjectTab({ createProject }: CreateProjectTabProps): ReactNode {
+export function CreateProjectTab( ): ReactNode {
 
 
 
@@ -63,6 +67,7 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
     const appThemeContext = useContext(themeContext);
     const fieldSetOptions: FieldSetOptions = { children: createProjectText, };
     const dateFieldSetOptions: FieldSetOptions = { children: fieldSetDateLegendText, textColor: appThemeContext.secondaryContentColor };
+    const userStore = React.useSyncExternalStore(UserStore.subscribe, UserStore.getSnapshotUser);
 
 
     const [participantState, participantDispatch] = useParticipantReducer();
@@ -155,6 +160,76 @@ export function CreateProjectTab({ createProject }: CreateProjectTabProps): Reac
 
 
     );
+
+    function createProject({ projectDescription, projectTitle, }: {
+    projectTitle: string;
+    projectDescription: string;
+}, { projectClients, projectDevelopers, projectManagers }: {
+    projectDevelopers: ParticipantInputData[];
+    projectManagers: ParticipantInputData[];
+    projectClients: ClientInputData[];
+}, { projectEndTime, projectStartTime }: {
+    projectStartTime: string;
+    projectEndTime: string;
+}): void{
+
+                LoadingStore.updateLoading();
+                //Maps project devs, managers and clients in accordance with the format specified in the create project-form
+                //The following should be known : Project always has at least 1 manager, all users added (inputData !== {"", ""|undefined, -1}) are verified users with userids
+                //Everything else must be checked -> startDate < endDate, endDate >=today, startDate, currentUser included in developers || managers (clientUsers can only be invited)
+                //projectTitle !== "" && projectDescription !== ""
+                //  handleProjectCreationAsync(projectClients, projectStartTime, projectEndTime, projectTitle, projectDescription, projectManagers, projectDevelopers);
+                //        const startDate = TimeConstraints.getLocalTimeParameters( new Date(projectStartTime));
+                //        const endDate = TimeConstraints.getLocalTimeParameters( new Date(projectEndTime));
+                //        const todaysDate = TimeConstraints.getLocalTimeParameters(new Date(Date.now())) ;
+                const currentUser = userStore;
+                const currentUserAsInput = { username: currentUser?.username.username, userId: currentUser?.authParameters.userId }
+                const allVariablesExist = (projectTitle.trim() !== "") && (projectDescription.trim() !== "") && (projectStartTime.trim() !== "") && (projectEndTime.trim() !== "") && (projectManagers.length >= 1)
+                        && ((projectManagers.filter((manager) => (manager.username === currentUserAsInput.username && manager.userId === currentUserAsInput.userId))[0] !== undefined) ||
+                                (projectDevelopers.filter(dev => (dev.username === currentUserAsInput.username && dev.userId === currentUserAsInput.userId))[0]!==undefined));
+                if (allVariablesExist) {
+                        const startDate = new Date(projectStartTime);
+                        const endDate = new Date(projectEndTime);
+                        const todaysDate = new Date(Date.now());
+
+
+                        const datesAreValid = ((endDate.getTime() >= startDate.getTime()) && (endDate.getTime() >= todaysDate.getTime()));
+
+                        if(datesAreValid){
+                                //All variables are valid -> We can now start construction of the project parameters
+                                const timeConstraints = new TimeConstraints(startDate, endDate);
+
+                                const managers = projectManagers.map((manager)=>{
+
+                                        return new Manager(manager.userId, manager.username, manager.userType);
+                                });
+                                const developersExist = (projectDevelopers.filter((dev)=>dev.userId!==-1)[0]!==undefined)
+                                const developers =developersExist ? projectDevelopers.map((developer)=>{
+
+                                        return new Developer(developer.userId, developer.username, developer.userType);
+                                }) 
+                                : null;
+
+                                const clientsExist = (projectClients.filter((client) => (client.userId === -1 && client.username === ""))[0] === undefined);
+
+                                const clients = (clientsExist) ? (projectClients.map((client)=>new Client(client.username, client.userId))) : null;
+                                const userIds = (clientsExist) ? projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId).concat(clients!.map((client)=>client.userId)) 
+                                : projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId);
+
+
+                                const project =  new Project(projectTitle, managers, clients, null, developers, projectDescription, timeConstraints );
+                                
+                                firebaseClient.createProject(project, userIds ).then(()=>{
+
+                                        LoadingStore.updateLoading();
+                                        alert("Project created!");
+                                        console.log(project);
+                                }).catch((error : Error) =>console.log(error));
+                                
+
+                        }
+                }
+        }
 
 }
 type ParticipantInputProps = {

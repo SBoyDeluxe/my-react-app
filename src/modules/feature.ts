@@ -8,6 +8,11 @@ import { TimeConstraints } from "./Timeconstraints";
  * 
  */
 export class Feature{
+    /**
+     * The title of the feature
+     */
+    title : string;
+
     /** The type of feature to be developed for the product
      * 
      */
@@ -24,21 +29,20 @@ export class Feature{
      * 
      */
     description:string;
-    /**The project for which this feature is wanted
-     * 
-     */
-    project:Project;
+ 
     /**The developers assigned to the feature
      * 
      */
-    assignedDevelopers: Developer[];
+    assignedDevelopers: Developer[]|null;
 
-    constructor(type:string, description:string, project:Project,timeconstraints: TimeConstraints, developmentTasks:Task[] ){
+    constructor(title:string,type:string, description:string,timeconstraints: TimeConstraints, developmentTasks:Task[], assignedDevelopers : Developer[]|null ){
+            this.title = title;
             this.type = type; 
             this.description = description;         
-            this.project = project;
             this.timeconstraints = timeconstraints;
             this.developmentTasks = developmentTasks;
+            this.assignedDevelopers = assignedDevelopers;
+            
     }
     /**Adds new development tasks in the development of the feature
      * 
@@ -89,7 +93,7 @@ export class Feature{
      */
     public assignDevelopers(developersToAssign:Developer[], taskToAssignDevelopers: Task|null){
 
-        if(taskToAssignDevelopers != null){
+        if(taskToAssignDevelopers !== null){
             //Assigns the team of developers to the task, the task can be instantiated with or without taskGoals that that you assign developers to
             taskToAssignDevelopers.assignDevelopers(developersToAssign, null);
             

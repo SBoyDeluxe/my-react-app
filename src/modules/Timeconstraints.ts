@@ -6,14 +6,9 @@
  * 
  * 
  */
-export class TimeConstraints{
-
-    constructor(startdate: Date, enddate: Date){
-    this.startdate = startdate;
-    this.enddate = enddate;
+export  class TimeConstraints{
 
 
-}
     /**The start date of work on a feature or project */
     private _startdate: Date;
     public get startdate(): string {
@@ -47,7 +42,15 @@ export class TimeConstraints{
     public set completiondate(value:Date) {
     this._completiondate = value;    }
 
-    completionTime:Date|null = null;
+
+
+     constructor(startdate: Date, enddate: Date){
+    this._startdate = startdate;
+    this._enddate = enddate;
+   
+
+
+}
   
 
 
@@ -105,6 +108,36 @@ return {
 
 
 }
+}
+/**
+ * Returns the fraction of how much time has passed since the start date.
+ * 
+ * @returns The time passed since the start date as a fraction of the total time alloted between start date and end date 
+ * 
+ * @example
+ *           const startDate =  Date.parse("04 Dec 2024 00:12:00 GMT");
+ *           const endDate =  Date.parse("06 Dec 2024 00:12:00 GMT");
+ * 
+ *           const  currentDate =  Date.parse("05 Dec 2024 00:12:00 GMT");
+ * 
+ *            const totalTime =  endDate.getTime() - startDate.getTime();
+ *           
+ *           const timePassed = currentDate.getTime() - startDate.getTime();
+ * 
+ * 
+ *           //In this example, 0.5 -> 1 day of the totally allotted 2 days have passed
+ *           return timePassed/totalTime;
+ * 
+ *      
+ * 
+ */
+public  getTimePassedFraction(){
+
+  const totalTime =  this._enddate.getTime() - this._startdate.getTime();
+
+  const timePassed = new Date(Date.now()).getTime() - this._startdate.getTime();
+
+  return timePassed/totalTime;
 }
 
 }

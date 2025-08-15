@@ -203,7 +203,7 @@ export class User {
     //}
 
     getProjects() {
-
+      
         
      }
     // Returns true if log in was successful, false otherwise

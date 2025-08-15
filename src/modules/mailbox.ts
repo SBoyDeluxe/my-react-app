@@ -1,3 +1,4 @@
+import { json } from "stream/consumers";
 import { FirebaseAPIClient } from "./firebaseapiClient";
 import { ProjectKeyObject } from "./project";
 
@@ -59,16 +60,16 @@ export class MailBox {
         /** 
          * The client used to send and recieve mail
          */
-        firebaseApiClient: FirebaseAPIClient;
+        // firebaseApiClient: FirebaseAPIClient;
 
         eventSource: EventSource | null;
 
-        constructor(publicKey: JsonWebKey, contents: string[], eventSource: EventSource | null, fbClient: FirebaseAPIClient) {
+        constructor(publicKey: JsonWebKey, contents: string[], eventSource: EventSource | null) {
 
                 this.publicKey = publicKey;
                 this.contents = contents;
                 this.eventSource = eventSource;
-                this.firebaseApiClient = fbClient;
+                // this.firebaseApiClient = fbClient;
         }
         /**
          * Gets all project indices and the jsonwebkeys sent to the user
@@ -83,8 +84,8 @@ export class MailBox {
                 const invites = this.contents.filter((string) => string.includes("project-invite"));
                 if (invites) {
                         //string has format {..."content:"<projectindex>:<projectJsonWebKeyEntries>"}
-                        const contents = invites.map((stringWithLabels) => stringWithLabels.split("\"content\":\""))[1];
-                        contents.forEach((contentString) => contentString.replace("}\"", ""));
+                        let contents = invites.map((stringWithLabels) => stringWithLabels.split("\"content\":\"")[1]);
+                        contents.forEach((contentString) => contentString = contentString.substring(0, contentString.length-3));
                         //Split on `:` -> projectIndex on one [0], webkey on [1] -> Every even number : (index+1)%2 === 0 ? <webkey> : <projectIndex>
                         const projectIndicesAndWebKeys = contents.map((contentString) => {
                                 const splitContent = contentString.split(":");
@@ -96,17 +97,22 @@ export class MailBox {
 
                                 const indexKeyOps = elementsOfJsonWebKey.indexOf("key_ops");
                                 const indexKty = elementsOfJsonWebKey.indexOf("kty");
+                                
                                 //All strings between indexKeyops and indexKty are keyOpValues
                                 const keyOpValues = elementsOfJsonWebKey.filter((val, index) => ((index > indexKeyOps) && (index < indexKty)));
                                 let jsonWebKey = {};
-                                for (let i = 0; i < elementsOfJsonWebKey.length; i + 2) {
-                                        if (!((i > indexKeyOps) && (i < indexKty))) {
+                                for (let i = 0; i < elementsOfJsonWebKey.length-1; i += 2) {
+                                        if (!((i > indexKeyOps) && (i < indexKty)) || i === indexKty) {
 
                                                 jsonWebKey = { ...jsonWebKey, [elementsOfJsonWebKey[i]]: elementsOfJsonWebKey[i + 1] }
                                         }
                                         else {
                                                 jsonWebKey = { ...jsonWebKey, ["key_ops"]: keyOpValues }
                                         }
+                                }
+                                jsonWebKey = {
+                                        ...jsonWebKey, 
+                                        ["kty"] : elementsOfJsonWebKey[indexKty+1].substring(0, elementsOfJsonWebKey[indexKty+1].length-2)
                                 }
 
                                 console.log(jsonWebKey);
@@ -150,9 +156,14 @@ export class MailBox {
                 }
         }
 
-        public addContent(mail: MailContent) {
+        public addContent(mail: string) {
+                if (this.contents[0]==="" || this.contents[0] === undefined) {
 
-                this.contents.concat(JSON.stringify(mail));
+                        this.contents = [mail]
+                }
+                else {
+                        this.contents.concat(mail);
+                }
         }
 
 

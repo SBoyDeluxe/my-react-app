@@ -582,7 +582,8 @@ export class CryptoUtilObject {
 
                 },
                 { name: "RSA-OAEP", hash:"SHA-512"},
-                false,
+                //Since we don´t change the rsa key this needs to be extractable to be re-wrapped with the new user key on log-out
+                true,
                 ["decrypt"]);
 
         }

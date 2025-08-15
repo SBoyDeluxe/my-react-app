@@ -148,75 +148,7 @@ export function App({  }: AppProps): React.ReactNode {
 
         }
 
-        function createProject({ projectDescription, projectTitle, }: {
-    projectTitle: string;
-    projectDescription: string;
-}, { projectClients, projectDevelopers, projectManagers }: {
-    projectDevelopers: ParticipantInputData[];
-    projectManagers: ParticipantInputData[];
-    projectClients: ClientInputData[];
-}, { projectEndTime, projectStartTime }: {
-    projectStartTime: string;
-    projectEndTime: string;
-}): void{
-
-                LoadingStore.updateLoading();
-                //Maps project devs, managers and clients in accordance with the format specified in the create project-form
-                //The following should be known : Project always has at least 1 manager, all users added (inputData !== {"", ""|undefined, -1}) are verified users with userids
-                //Everything else must be checked -> startDate < endDate, endDate >=today, startDate, currentUser included in developers || managers (clientUsers can only be invited)
-                //projectTitle !== "" && projectDescription !== ""
-                //  handleProjectCreationAsync(projectClients, projectStartTime, projectEndTime, projectTitle, projectDescription, projectManagers, projectDevelopers);
-                //        const startDate = TimeConstraints.getLocalTimeParameters( new Date(projectStartTime));
-                //        const endDate = TimeConstraints.getLocalTimeParameters( new Date(projectEndTime));
-                //        const todaysDate = TimeConstraints.getLocalTimeParameters(new Date(Date.now())) ;
-                const currentUser = userStore;
-                const currentUserAsInput = { username: currentUser?.username.username, userId: currentUser?.authParameters.userId }
-                const allVariablesExist = (projectTitle.trim() !== "") && (projectDescription.trim() !== "") && (projectStartTime.trim() !== "") && (projectEndTime.trim() !== "") && (projectManagers.length >= 1)
-                        && ((projectManagers.filter((manager) => (manager.username === currentUserAsInput.username && manager.userId === currentUserAsInput.userId))[0] !== undefined) ||
-                                (projectDevelopers.filter(dev => (dev.username === currentUserAsInput.username && dev.userId === currentUserAsInput.userId))[0]!==undefined));
-                if (allVariablesExist) {
-                        const startDate = new Date(projectStartTime);
-                        const endDate = new Date(projectEndTime);
-                        const todaysDate = new Date(Date.now());
-
-
-                        const datesAreValid = ((endDate.getTime() >= startDate.getTime()) && (endDate.getTime() >= todaysDate.getTime()));
-
-                        if(datesAreValid){
-                                //All variables are valid -> We can now start construction of the project parameters
-                                const timeConstraints = new TimeConstraints(startDate, endDate);
-
-                                const managers = projectManagers.map((manager)=>{
-
-                                        return new Manager(manager.userId, manager.username, manager.userType);
-                                });
-                                const developersExist = (projectDevelopers.filter((dev)=>dev.userId!==-1)[0]!==undefined)
-                                const developers =developersExist ? projectDevelopers.map((developer)=>{
-
-                                        return new Developer(developer.userId, developer.username, developer.userType);
-                                }) 
-                                : null;
-
-                                const clientsExist = (projectClients.filter((client) => (client.userId === -1 && client.username === ""))[0] === undefined);
-
-                                const clients = (clientsExist) ? (projectClients.map((client)=>new Client(client.username, client.userId))) : null;
-                                const userIds = (clientsExist) ? projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId).concat(clients!.map((client)=>client.userId)) 
-                                : projectManagers.concat(projectDevelopers).filter((vals)=>vals.userId!==-1).map((validInput)=>validInput.userId);
-
-
-                                const project =  new Project(projectTitle, managers, clients, null, developers, projectDescription, timeConstraints );
-                                
-                                firebaseClient.createProject(project, userIds ).then(()=>{
-
-                                        LoadingStore.updateLoading();
-                                        alert("Project created!");
-                                        console.log(project);
-                                }).catch((error : Error) =>console.log(error));
-                                
-
-                        }
-                }
-        }
+        
 
 
         const [loginToggle, setLoginToggle] = React.useState(initToggle);
@@ -288,12 +220,14 @@ export function App({  }: AppProps): React.ReactNode {
 
                                         </Route>
                                         <Route path='/logged-in' element={
+                                                <>
+                                                <LoggedInPage loading={loadingStore} themeState={themeState}  />
 
-                                                <LoggedInPage createProject={createProject} loading={loadingStore} userState={userStore} theme={theme} themeState={themeState} >
+                                              
+                                                </>
+                                        }>
 
-                                                </LoggedInPage>
-
-                                        }></Route>
+                                        </Route>
                                 </Routes>
                         </themeContext.Provider>
                 </firebaseClientContext.Provider>
@@ -306,160 +240,6 @@ export function App({  }: AppProps): React.ReactNode {
         );
 
 
-        function handleProjectCreation() {
-
-
-        }
-
-        async function handleProjectCreationAsync(projectClients: string, projectStartTime: string, projectEndTime: string, projectTitle: string, projectDescription: string, projectManagers: string, projectDevelopers: string) {
-                const managers = mapProjectManagers();
-                const devs = mapProjectDevs();
-                const clientUsernames = projectClients.trim().split(",");
-                const managersUserNames: string[] = managers.map((manager) => {
-
-                        return manager.managerUsername;
-                });
-                const devsUserNames: string[] = devs.map((dev) => {
-
-                        return dev.developerUsername;
-                });
-
-                const userIds = await getUserIdsFromUsernames(managersUserNames, devsUserNames, clientUsernames);
-
-                const wrongUsernameCollection = mapWrongUsernames(userIds);
-
-                //Filter out invalid users
-                const validDevs = userIds.devUserIds.map((devId, index) => {
-
-                        //If devId !== null <=> devs[index] contains valid date
-                        if (devId) {
-
-                                return ({ devUserId: devId, devEntry: devs[index] });
-
-
-                        }
-                });
-                const validManagers = userIds.managerUserIds.map((managerId, index) => {
-
-                        //If managerId !== null <=> managers[index] contains valid date
-                        if (managerId) {
-
-                                return ({ managerUserId: managerId, managerEntry: managers[index] });
-
-
-                        }
-                });
-                const validClients = userIds.clientUserIds.map((clientId, index) => {
-
-                        //If clientId !== null <=> clients[index] contains valid date
-                        if (clientId) {
-
-                                return ({ clientUserId: clientId, clientUsername: clientUsernames[index] });
-
-
-                        }
-                });
-                const validClientUserIds = userIds.clientUserIds.filter((value) => (value !== null));
-                const validDevUserIds = userIds.devUserIds.filter((value) => (value !== null));
-                const validManagerUserIds = userIds.managerUserIds.filter((value) => (value !== null));
-
-
-
-
-                //Convert date-strings to Date objects to make TimeContstraints
-                const startDate = new Date(projectStartTime);
-                const endDate = new Date(projectEndTime);
-
-                //Instantiate Clients, Managers and Developers
-                const instantiatedManagers: Manager[] = validManagers.map((manager) => { return (new Manager(manager?.managerUserId!, manager?.managerEntry.managerUsername!, manager?.managerEntry.managerTypes!)); });
-
-                const instantiatedDevs: Developer[] = validDevs.map((dev) => { return (new Developer(dev?.devUserId!, dev?.devEntry.developerUsername!, dev?.devEntry.developerTypes!)); });
-
-                const instantiatedClients: Client[] = validClients.map((client) => { return (new Client(client?.clientUsername!, client?.clientUserId!)); });
-
-
-
-                //Create new project and post it with firebaseClient.createProject() -> Creates the project inside the database and invites the valid users
-                const newProject: Project = new Project(projectTitle, instantiatedManagers, instantiatedClients, null, instantiatedDevs, projectDescription, new TimeConstraints(startDate, endDate));
-
-                await firebaseClient.createProject(newProject, (validClientUserIds.concat(validDevUserIds).concat(validManagerUserIds).concat(userStore?.authParameters.userId!))).then(() => {
-
-                        LoadingStore.updateLoading();
-                        alert(`The following usernames were not found in our database : \n Clients : ${wrongUsernameCollection.wrongUsernameClientCollection} \n Developers : ${wrongUsernameCollection.wrongUsernameDeveloperCollection} \n Managers : ${wrongUsernameCollection.wrongUsernameDeveloperCollection}`);
-                });
-
-
-
-
-
-
-
-
-
-                function mapWrongUsernames(userIds: {
-                        managerUserIds: (number | null)[];
-                        devUserIds: (number | null)[];
-                        clientUserIds: (number | null)[];
-                }) {
-                        const wrongUsernameClientCollection = userIds.clientUserIds.map((val, index) => {
-                                if (val === null) {
-                                        return clientUsernames[index];
-                                }
-                        });
-                        const wrongUsernameDeveloperCollection = userIds.devUserIds.map((val, index) => {
-                                if (val === null) {
-                                        return devsUserNames[index];
-                                }
-                        });
-                        const wrongUsernameManagersCollection = userIds.managerUserIds.map((val, index) => {
-                                if (val === null) {
-                                        return managersUserNames[index];
-                                }
-                        });
-
-                        return { wrongUsernameManagersCollection, wrongUsernameDeveloperCollection, wrongUsernameClientCollection };
-                }
-
-                async function getUserIdsFromUsernames(managersUserNames: string[], devsUserNames: string[], clientUsernames: string[]) {
-                        let managerUserIds: (number | null)[] = [null];
-                        let devUserIds: (number | null)[] = [null];
-                        let clientUserIds: (number | null)[] = [null];
-
-                        if (managersUserNames) {
-                                managerUserIds = await firebaseClient.getUserIds(managersUserNames);
-                        }
-
-                        if (devsUserNames) {
-                                devUserIds = await firebaseClient.getUserIds(devsUserNames);
-                        }
-
-                        if (clientUsernames) {
-
-                                clientUserIds = await firebaseClient.getUserIds(clientUsernames);
-                        }
-
-                        return { managerUserIds, devUserIds, clientUserIds };
-                }
-
-                function mapProjectManagers() {
-                        const managers = projectManagers.trim().split(";");
-                        const managerEntries = managers.map((managerEntryString) => {
-                                const managerUsername: string = managerEntryString.split(":")[0];
-                                const managerTypes: string[] = managerEntryString.split(":")[1].split(`,`);
-                                return { managerUsername, managerTypes };
-                        });
-                        return managerEntries;
-                }
-                function mapProjectDevs() {
-                        const developers = projectDevelopers.trim().split(";");
-                        const developerEntries = developers.map((developerEntryString) => {
-                                const developerUsername: string = developerEntryString.split(":")[0];
-                                const developerTypes: string[] = developerEntryString.split(":")[1].split(`,`);
-                                return { developerUsername, developerTypes };
-                        });
-                        return developerEntries;
-                }
-        }
 }
 
 

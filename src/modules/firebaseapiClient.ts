@@ -11,6 +11,12 @@ import { firebaseClient } from "./react/store/UserStore";
  * 
  * 
  */
+
+type EventsourceData = {
+
+    path: string,
+    data: string
+}
 export class FirebaseAPIClient {
 
     /**
@@ -93,7 +99,7 @@ export class FirebaseAPIClient {
                 }
             });
 
-        }).catch((error:Error)=>{throw error});
+        }).catch((error: Error) => { throw error });
 
 
     }
@@ -110,160 +116,188 @@ export class FirebaseAPIClient {
 
         const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(FirebaseURLBuilder.tableEndpoints.projectUpdate);
         const eventSource: EventSource = new EventSource(projectUpdateTableUrl);
-        const hashes = new Array(projectHashesAndKeyObjects.length);
-        const indices = new Array(projectHashesAndKeyObjects.length);
+//         const hashes = new Array(projectHashesAndKeyObjects.length);
+//         const indices = new Array(projectHashesAndKeyObjects.length);
 
-        projectHashesAndKeyObjects.map(async (value, index) => {
+//         projectHashesAndKeyObjects.map(async (value, index) => {
 
-            hashes[index] = await value.hash;
-            indices[index] = await (await value.projectKeyObject).projectIndex;
-
-
-        });
-
-        eventSource.addEventListener("patch", async (eventSrc: any) => {
-            console.log(eventSrc);
-            //Only if an update happens in an object we care about do we want to actually trigger a re-read of the project
-            if (indices.includes(JSON.parse(eventSrc.data).path as string)) {
-                //We get index to get the appropriate hash-val
-                const data = JSON.parse(eventSrc.data);
-                const index = indices.indexOf(data.path);
-
-                console.log(data);
-                console.log(index);
-
-                const hash = data.data;
-                console.log(hash);
-
-                if (hash as string !== hashes[index]) {
-
-                    const oldProject = Object.entries(projects[index]);
-
-                    const updatedProject = await this.readProject(projectHashesAndKeyObjects[index].projectKeyObject);
-
-                    const changes = Object.entries(updatedProject).filter((keyValuePair, index) => { keyValuePair[1] !== oldProject[index][1] });
-
-                    const changesAsObject = Object.fromEntries(changes);
-
-                    console.log(oldProject);
-                    console.log(updatedProject);
-                    console.log(changes);
-                    console.log(changesAsObject);
-                    mailbox.addContent({ label: "project-update", content: JSON.stringify(changesAsObject) });
-                }
+//             hashes[index] = await value.hash;
+//             indices[index] = await (await value.projectKeyObject).projectIndex;
 
 
+//         });
 
+//         eventSource.addEventListener("patch", async (eventSrc: any) => {
+//             console.log(eventSrc);
+//             //Only if an update happens in an object we care about do we want to actually trigger a re-read of the project
+//             if (indices.includes(JSON.parse(eventSrc.data).path as string)) {
+//                 //We get index to get the appropriate hash-val
+//                 const data = JSON.parse(eventSrc.data);
+//                 const index = indices.indexOf(data.path);
 
-            }
+//                 console.log(data);
+//                 console.log(index);
 
-        }, false);
-        eventSource.addEventListener("put", async (eventSrc: any) => {
-            console.log(eventSrc);
-            //Only if an update happens in an object we care about do we want to actually trigger a re-read of the project
-            if (indices.includes(JSON.parse(eventSrc.data).path as string)) {
-                //We get index to get the appropriate hash-val
-                const data = JSON.parse(eventSrc.data);
-                const index = indices.indexOf(data.path);
+//                 const hash = data.data;
+//                 console.log(hash);
 
-                console.log(data);
-                console.log(index);
+//                 if (hash as string !== hashes[index]) {
 
-                const hash = data.data;
-                console.log(hash);
+//                     const oldProject = Object.entries(projects[index]);
 
-                if (hash as string !== hashes[index]) {
+//                     const updatedProject = await this.readProject(await projectHashesAndKeyObjects[index].projectKeyObject);
 
-                    const oldProject = Object.entries(projects[index]);
+//                     const changes = Object.entries(updatedProject).filter((keyValuePair, index) => { keyValuePair[1] !== oldProject[index][1] });
 
-                    const updatedProject = await this.readProject(projectHashesAndKeyObjects[index].projectKeyObject);
+//                     const changesAsObject = Object.fromEntries(changes);
 
-                    const changes = Object.entries(updatedProject).filter((keyValuePair, index) => { keyValuePair[1] !== oldProject[index][1] });
-
-                    const changesAsObject = Object.fromEntries(changes);
-
-                    console.log(oldProject);
-                    console.log(updatedProject);
-                    console.log(changes);
-                    console.log(changesAsObject);
-                    mailbox.addContent({ label: "project-update", content: JSON.stringify(changesAsObject) });
-                }
+//                     console.log(oldProject);
+//                     console.log(updatedProject);
+//                     console.log(changes);
+//                     console.log(changesAsObject);
+//                     mailbox.addContent({ label: "project-update", content: JSON.stringify(changesAsObject) });
+//                 }
 
 
 
 
-            }
-        }, false);
+//             }
 
-        return eventSource;
+//         }, false);
+//         eventSource.addEventListener("put", async (eventSrc: any) => {
+//             console.log(eventSrc);
+//             //Only if an update happens in an object we care about do we want to actually trigger a re-read of the project
+//             if (indices.includes(JSON.parse(eventSrc.data).path as string)) {
+//                 //We get index to get the appropriate hash-val
+//                 const data = JSON.parse(eventSrc.data);
+//                 const index = indices.indexOf(data.path);
+
+//                 console.log(data);
+//                 console.log(index);
+
+//                 const hash = data.data;
+//                 console.log(hash);
+
+//                 if (hash as string !== hashes[index]) {
+
+//                     const oldProject = Object.entries(projects[index]);
+
+//                     const updatedProject = await this.readProject(projectHashesAndKeyObjects[index].projectKeyObject);
+
+//                     const changes = Object.entries(updatedProject).filter((keyValuePair, index) => { keyValuePair[1] !== oldProject[index][1] });
+
+//                     const changesAsObject = Object.fromEntries(changes);
+
+//                     console.log(oldProject);
+//                     console.log(updatedProject);
+//                     console.log(changes);
+//                     console.log(changesAsObject);
+//                     mailbox.addContent({ label: "project-update", content: JSON.stringify(changesAsObject) });
+//                 }
 
 
 
-    }
+
+//             }
+//         }, false);
+
+//         return eventSource;
+
+
+
+     }
     /**
      * Gets the mailbox for a specific user-id and deciphers the contents using the private key
      * @param userId 
      * @param privKey 
      * @returns {Promise<EventSource>} - The event-source object that can be used the owner of the specific mailbox to listen for updates
      */
-    async setMailboxListener({ authParameters, mailbox }: Pick<User, ("authParameters" | "mailbox")>, privKey: CryptoKey): Promise<EventSource> {
-        const mailToUrl = FirebaseURLBuilder.getEndpointURL(`mailbox/${authParameters.userId}.json`);
-        const evSrc = new EventSource(mailToUrl);
+    async setMailboxListener({ authParameters, mailbox }: Pick<User, ("authParameters" | "mailbox")>, privKey: CryptoKey): Promise < EventSource > {
+            const mailToUrl = FirebaseURLBuilder.getEndpointURL(`mailbox/${authParameters.userId}.json`);
+            const evSrc = new EventSource(mailToUrl);
 
 
 
 
-        evSrc.addEventListener("patch", (eventsrc: EventSource, ev: Event) => {
+            // evSrc.addEventListener("patch", (eventsrc: EventSource, ev: Event) => {
 
-            console.log(eventsrc);
-            console.log(ev);
+            //     console.log(eventsrc);
+            //     console.log(ev);
 
 
-        });
-        evSrc.addEventListener("put", async (eventsrc: any, ev: any) => {
+            // });
+            evSrc.addEventListener("put", async (eventsrc: any, ev: any) => {
 
-            console.log(eventsrc);
-            console.log(ev);
-          
+                // If path === "/" then we should replace the whole mailbox contents array
+                const eventJson = JSON.parse(eventsrc.data);
 
-            const contents = JSON.parse(eventsrc.data).data;
-            delete contents.publicWebKey;
-            console.log(contents);
+                let wantedData = {};
 
-            //Decrypt each value
-            let contentValues = Object.values(contents).map((value) => { return new Uint8Array(CryptoUtilObject.decodeBase64(value).split(",")); });
+                if (eventJson.path === "/") {
 
-            let decryptedContents: Promise<string[]> = new Promise<string[]>(async (resolve, reject) => {
 
-                let result = contentValues.map((encrypedData, index) => {
-                    return CryptoUtilObject.decrypt(encrypedData, privKey, null, true);
-                });
+                    //Make sure publicwebkey is not part of data
+                    delete eventJson.data.publicWebKey;
 
-                resolve(await Promise.all(result))
+                    const encodedValues = Object.values(eventJson.data);
 
-            });
-
-            
+                    const decodedValues = encodedValues.map((val) => CryptoUtilObject.decodeBase64(val));
+                    // Make into uint8Arrays for decryption
+                    const encryptedDataArrays = decodedValues.map((valueArray) => new Uint8Array(valueArray.split(",").map((integerAsString) => parseInt(integerAsString))));
 
 
 
 
 
+                    let decryptedContents = await new Promise<string[]>(async (resolve, reject) => {
+
+                        let result = encryptedDataArrays.map((encrypedData) => {
+                            return CryptoUtilObject.decrypt(encrypedData, privKey, null, true);
+                        })
+                        resolve(await Promise.all(result));
+                    });
+
+
+
+                    mailbox.setContents(decryptedContents);
+
+                    console.log(decryptedContents);
+                }
+                else {
+
+                    //Means it´s a singular entry in some sub-index of mailbox <=> We only need to get the data and decrypt it, and then add it to the already exisiting content
+
+                    const encodedValue = eventJson.data;
+
+                    const decodedValue = CryptoUtilObject.decodeBase64(encodedValue);
+
+                    const encryptedDataAsArrayBuffer = new Uint8Array(decodedValue.split(",").map((integerAsString) => parseInt(integerAsString)));
+
+                    const decryptedData = await CryptoUtilObject.decrypt(encryptedDataAsArrayBuffer, privKey, null, true);
+
+                    console.log(decryptedData);
+
+                    mailbox.addContent(decryptedData);
 
 
 
 
-            console.log(decryptedContents);
-            mailbox.setContents(await decryptedContents);
-
-        }, false);
-
-
-        return evSrc;
+                }
 
 
 
-    }
+
+
+
+
+            }, false);
+
+
+            return evSrc;
+
+
+
+        }
     /**
      * Creates a project and invites the users specified in the userid list
      * 
@@ -274,62 +308,62 @@ export class FirebaseAPIClient {
      * 
      * @see  | {@linkcode FirebaseAPIClient.getUserIds} |
      */
-    async createProject(project: Project,  userIds?: number[]) {
+    async createProject(project: Project, userIds ?: number[]) {
 
-       const hashVal = await project.hash;
-      
-        const projectKeyObject = await project.projectKeyObject;
-        const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
-        const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(`projectupdate/${projectKeyObject.projectIndex}.json`);
+            const hashVal = await project.hash;
 
-
-
-        const projectData = project as Exclude<Project, ProjectKeyObject>;
-
-        //We now encrypt the projectData and encode the result with base64 -> First we parse the JsonWebKey as a CryptoKey
-
-        const jsonWebKey = projectKeyObject.projectKey;
-        const projectCryptoKey = await window.crypto.subtle.importKey("jwk", jsonWebKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
-
-        const [initVector, uint8Array] = await CryptoUtilObject.encrypt(projectData, projectCryptoKey, false);
-        //Iv first, then the contents
-        const base64String = CryptoUtilObject.encodeBase64(`${initVector}:${uint8Array}`);
+            const projectKeyObject = await project.projectKeyObject;
+            const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
+            const projectUpdateTableUrl = FirebaseURLBuilder.getEndpointURL(`projectupdate/${projectKeyObject.projectIndex}.json`);
 
 
-        fetch(projectTableUrl, FirebaseURLBuilder.generateOptions("PUT", base64String)).then((response) => {
 
-            if (!response.ok) {
+            const projectData = project as Exclude<Project, ProjectKeyObject>;
 
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - createProject-function in FirebaseAPIClient (create project at /project)`);
+            //We now encrypt the projectData and encode the result with base64 -> First we parse the JsonWebKey as a CryptoKey
+
+            const jsonWebKey = projectKeyObject.projectKey;
+            const projectCryptoKey = await window.crypto.subtle.importKey("jwk", jsonWebKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+
+            const [initVector, uint8Array] = await CryptoUtilObject.encrypt(projectData, projectCryptoKey, false);
+            //Iv first, then the contents
+            const base64String = CryptoUtilObject.encodeBase64(`${initVector}:${uint8Array}`);
+
+
+            fetch(projectTableUrl, FirebaseURLBuilder.generateOptions("PUT", base64String)).then((response) => {
+
+                if (!response.ok) {
+
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - createProject-function in FirebaseAPIClient (create project at /project)`);
+                }
+
+            });
+
+            //To notify any user to changes in their projects we use a hash-value, since Event-source is limited in many browser to 6 or less at any given time
+
+            fetch(projectUpdateTableUrl, FirebaseURLBuilder.generateOptions("PUT", hashVal)).then((response) => {
+
+                console.log(response)
+                if (!response.ok) {
+
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - createProject-function in FirebaseAPIClient (hash-fetch, projectupdate-table)`);
+                }
+
+
             }
 
-        });
+            );
 
-        //To notify any user to changes in their projects we use a hash-value, since Event-source is limited in many browser to 6 or less at any given time
+            this.currentUser?.setHashVal(projectKeyObject.projectIndex, hashVal);
+            if (userIds) {
 
-        fetch(projectUpdateTableUrl, FirebaseURLBuilder.generateOptions("PUT", hashVal)).then((response) => {
-
-            console.log(response)
-            if (!response.ok) {
-
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - createProject-function in FirebaseAPIClient (hash-fetch, projectupdate-table)`);
+                await userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${projectKeyObject.projectIndex}:${Object.entries(projectKeyObject.projectKey)}` }) })
             }
+
+
 
 
         }
-
-        );
-
-        this.currentUser?.setHashVal(projectKeyObject.projectIndex, hashVal);
-        if (userIds) {
-
-            await userIds.map((userid) => { this.sendMail(userid, { label: `project-invite`, content: `${projectKeyObject.projectIndex}:${Object.entries(projectKeyObject.projectKey)}` }) })
-        }
-
-
-
-
-    }
     /**
      * Gets a project via the ProjectKeyObject sent in project-invites
      * 
@@ -340,54 +374,56 @@ export class FirebaseAPIClient {
 
 
 
-        const jsonWebKey = projectKeyObject.projectKey;
-        const projectCryptoKey = await window.crypto.subtle.importKey("jwk", jsonWebKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+            const jsonWebKey = projectKeyObject.projectKey;
+            const projectCryptoKey = await window.crypto.subtle.importKey("jwk", jsonWebKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
 
-        //Define URL to project-table
-        const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
+            //Define URL to project-table
+            const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
 
-        //Fetch from the endpoint
-        const projectPromise = fetch(projectTableUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
+            //Fetch from the endpoint
+            const projectPromise = fetch(projectTableUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
 
-            if (response.ok) {
+                if (response.ok) {
 
-                return response.json();
+                    return response.json();
+                }
+                else {
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - readProject-function in FirebaseAPIClient`);
+
+                }
+
+            }).then(async (json) => {
+
+                /*The contents are encrypted with aes-gcm and encoded with base64 */
+                const decodedJson = CryptoUtilObject.decodeBase64(json);
+                console.log(decodedJson);
+                const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
+
+                const decryptedData = await CryptoUtilObject.decrypt(dataBuffer, projectCryptoKey, ivBuffer, false);
+
+                const projectData = JSON.parse(decryptedData) as Exclude<Project, ProjectKeyObject>;
+
+                const project = deserializeProjectData(projectData);
+                project.projectKeyObject = new Promise<ProjectKeyObject>((resolve) => resolve(projectKeyObject))
+
+
+
+
+                return project;
+
+
+            });
+
+            return projectPromise;
+
+
+
+
+            function deserializeProjectData(projectData: Project) {
+                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+                return deserializedProject;
             }
-            else {
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - readProject-function in FirebaseAPIClient`);
-
-            }
-
-        }).then(async (json) => {
-
-            /*The contents are encrypted with aes-gcm and encoded with base64 */
-            const decodedJson = CryptoUtilObject.decodeBase64(json);
-            console.log(decodedJson);
-            const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
-
-            const decryptedData = await CryptoUtilObject.decrypt(dataBuffer, projectCryptoKey, ivBuffer, false);
-
-            const projectData = JSON.parse(decryptedData) as Exclude<Project, ProjectKeyObject>;
-
-            const project = deserializeProjectData(projectData)
-
-
-
-
-            return project;
-
-
-        });
-
-        return projectPromise;
-
-
-
-
-        function deserializeProjectData(projectData: Project) {
-            return new Project(projectData.title, projectKeyObject, projectData.managerTeam, null ,projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
         }
-    }
 
     /**
      * Gets the user-ids of the user with the given usernames, throws an error if none are found
@@ -398,57 +434,57 @@ export class FirebaseAPIClient {
      */
     async getUserIds(usernames: string[]) {
 
-        const usernameUrl = FirebaseURLBuilder.getEndpointURL(FirebaseURLBuilder.tableEndpoints.username);
+            const usernameUrl = FirebaseURLBuilder.getEndpointURL(FirebaseURLBuilder.tableEndpoints.username);
 
-        const response = fetch(usernameUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
+            const response = fetch(usernameUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
 
-            if (response.ok) {
+                if (response.ok) {
 
-                return response.json();
-            }
-            else {
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - getUserIds-function in FirebaseAPIClient`);
+                    return response.json();
+                }
+                else {
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - getUserIds-function in FirebaseAPIClient`);
 
-            }
+                }
 
-        }).then(async (json) => {
+            }).then(async (json) => {
 
-            const decodedJson = CryptoUtilObject.decodeBase64(json);
-            console.log(decodedJson);
-            const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
+                const decodedJson = CryptoUtilObject.decodeBase64(json);
+                console.log(decodedJson);
+                const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
 
 
-            const usernameList = await CryptoUtilObject.decrypt(dataBuffer, null, ivBuffer, false);
+                const usernameList = await CryptoUtilObject.decrypt(dataBuffer, null, ivBuffer, false);
 
-            //Make array to hold results
-            let resultingUserIdArray = new Array<(number | null)>(usernames.length);
-            //Split username list to obtain all usernames as separate strings
-            const existingUsernamesArray = usernameList.split(" ");
-            //Counts the number of mismatches ; If the number of mismatches == usernames.length <=> Not one username/userid pair found <=> throws error
-            let nullCounter = 0;
-            usernames.forEach((usernameToSearchFor, index) => {
+                //Make array to hold results
+                let resultingUserIdArray = new Array<(number | null)>(usernames.length);
+                //Split username list to obtain all usernames as separate strings
+                const existingUsernamesArray = usernameList.split(" ");
+                //Counts the number of mismatches ; If the number of mismatches == usernames.length <=> Not one username/userid pair found <=> throws error
+                let nullCounter = 0;
+                usernames.forEach((usernameToSearchFor, index) => {
 
-                const usernameExists = (existingUsernamesArray.includes(usernameToSearchFor));
-                resultingUserIdArray[index] = (usernameExists) ? existingUsernamesArray.indexOf(usernameToSearchFor) : null;
-                nullCounter += (usernameExists) ? 0 : 1;
+                    const usernameExists = (existingUsernamesArray.includes(usernameToSearchFor));
+                    resultingUserIdArray[index] = (usernameExists) ? existingUsernamesArray.indexOf(usernameToSearchFor) : null;
+                    nullCounter += (usernameExists) ? 0 : 1;
+
+
+                });
+                if (nullCounter !== usernameList.length) {
+
+                    return resultingUserIdArray;
+                }
+                else {
+                    throw new Error("No such usernames found");
+                }
+
+
+
 
 
             });
-            if (nullCounter !== usernameList.length) {
-
-                return resultingUserIdArray;
-            }
-            else {
-                throw new Error("No such usernames found");
-            }
-
-
-
-
-
-        });
-        return await response;
-    }
+            return await response;
+        }
 
     /**
      * This function takes in a user instance, checks if the specified username is available and if and only if
@@ -456,29 +492,57 @@ export class FirebaseAPIClient {
      * 
      */
     async signUp(username: string, password: string) {
-        const fbClient: FirebaseAPIClient = this;
+            const fbClient: FirebaseAPIClient = this;
 
-        //Gets the url to the username-list
-        const usernameUrl = FirebaseURLBuilder.getEndpointURL(FirebaseURLBuilder.tableEndpoints.username);
+            //Gets the url to the username-list
+            const usernameUrl = FirebaseURLBuilder.getEndpointURL(FirebaseURLBuilder.tableEndpoints.username);
 
-        const response = fetch(usernameUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
+            const response = fetch(usernameUrl, FirebaseURLBuilder.generateOptions("GET", null)).then((response) => {
 
-            if (response.ok) {
+                if (response.ok) {
 
-                return response.json();
-            }
-            else {
-                throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - signUp-function in FirebaseAPIClient`);
-
-            }
-
-        }).then(async (json) => {
-            let usernameListLength = await new Promise<number>(async (resolve) => {
-
-                if (!json) {
-                    resolve(1);
+                    return response.json();
                 }
                 else {
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - signUp-function in FirebaseAPIClient`);
+
+                }
+
+            }).then(async (json) => {
+                let usernameListLength = await new Promise<number>(async (resolve) => {
+
+                    if (!json) {
+                        resolve(1);
+                    }
+                    else {
+                        //The list comes in base64-encoded format, we decode it
+                        const decodedJson = CryptoUtilObject.decodeBase64(json);
+                        console.log(decodedJson);
+                        const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
+
+                        //CryptoUtilObject.decrypt(decodedJson[1],null, decodedJson[])
+                        await CryptoUtilObject.decrypt(dataBuffer, null, ivBuffer, false).then(async (val) => {
+                            if (val!.includes(username)) {
+                                // If username is included we want to throw an error
+                                throw new Error("Username was taken, please try another one!");
+
+                            }
+                            else {
+                                //Add new username to usernameList
+                                val += ` ${username}`;
+                                return resolve(val!.split(" ").length);
+
+
+
+                            }
+                        });
+                    }
+
+
+                });
+                if (
+                    json) {
+
                     //The list comes in base64-encoded format, we decode it
                     const decodedJson = CryptoUtilObject.decodeBase64(json);
                     console.log(decodedJson);
@@ -494,181 +558,158 @@ export class FirebaseAPIClient {
                         else {
                             //Add new username to usernameList
                             val += ` ${username}`;
-                            return resolve(val!.split(" ").length);
+                            console.log(val);
+                            return await CryptoUtilObject.encrypt(val!, null, false);
+
+                        }
 
 
+
+
+                    }).then((encryptedData) => {
+                        return CryptoUtilObject.encodeBase64(`${encryptedData![0]}:${encryptedData![1]}`);
+
+                    }).then((base64String) => {
+                        // We post it to the username list
+                        return fetch(usernameUrl, FirebaseURLBuilder.generateOptions("PUT", base64String))
+
+                    }).then((response) => {
+                        if (response.ok) {
+                            console.log(response);
+
+                        }
+                        else {
+
+                            throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /username`);
+                        }
+                    });
+
+                    //We create the user-keys 
+                    const { userTableEntry, userToAdd } = await createUser();
+                    await this.createMailBox(userToAdd.authParameters.userId, userToAdd.authParameters.publicMailboxKey);
+
+
+                    //Now we post it the user into /user/{Userid}
+
+                    await fetch(FirebaseURLBuilder.getEndpointURL(`/user/${usernameListLength - 1}.json`), FirebaseURLBuilder.generateOptions("PUT", userTableEntry)).then((response) => {
+
+                        if (response.ok) {
+                            console.log(response);
+                        }
+                        else {
+                            throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /users`);
 
                         }
                     });
+                    this.currentUser = userToAdd;
+                    const privKey = await CryptoUtilObject.unwrapKey(this.currentUser.authParameters.mailboxPrivKey, this.currentUser.password.passwordKey, this.currentUser.authParameters.ivPrivKey, true)
+                    this.setMailboxListener({ authParameters: this.currentUser.authParameters, mailbox: this.currentUser.mailbox }, privKey);
+
+                    return userToAdd;
+                }
+                else {
+
+                    // response.ok <=> List does not exist yet <=> Any username is okay <=> We do first time set-up, but first we add the username to the usernamelist and encrypt the list using the application key :
+
+                    const usernameList = CryptoUtilObject.encrypt([username].toString(), null, false).then((val) => {
+                        console.log(val);
+                        return CryptoUtilObject.encodeBase64(`${val![0]}:${val![1]}`);
+                    }).then((base64String) => {
+                        // We post it to the username list
+                        return fetch(usernameUrl, FirebaseURLBuilder.generateOptions("PUT", base64String))
+
+                    }).then((response) => {
+                        if (response.ok) {
+                            console.log(response);
+
+                        }
+                        else {
+
+                            throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /username`);
+                        }
+
+                    }).catch((error) => console.log(error));
+
+                    //First we create the password/username-based wrapping/unwrapping key - This is saved under user.password
+                    const { userTableEntry, userToAdd } = await createUser();
+                    await this.createMailBox(userToAdd.authParameters.userId, userToAdd.authParameters.publicMailboxKey);
+
+                    //Now we post it the user into /user/{Userid}
+
+                    await fetch(FirebaseURLBuilder.getEndpointURL("/user/0.json"), FirebaseURLBuilder.generateOptions("PUT", userTableEntry)).then((response) => {
+
+                        if (response.ok) {
+                            console.log(response);
+                        }
+                        else {
+                            throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /users`);
+
+                        }
+                    });
+
+                    this.currentUser = userToAdd;
+                    const privKey = await CryptoUtilObject.unwrapKey(this.currentUser.authParameters.mailboxPrivKey, this.currentUser.password.passwordKey, this.currentUser.authParameters.ivPrivKey, true)
+                    this.setMailboxListener({ authParameters: this.currentUser.authParameters, mailbox: this.currentUser.mailbox }, privKey);
+                    return userToAdd;
+
+
                 }
 
+                /**
+            * 
+            * @returns {Promise<{
+            *      userTableEntry: string;
+            *      userToAdd: User;
+            *  }>} - The base64 encoded user-object for entry into /user-table and the User-object
+            * 
+            * @see | {@linkcode User} |
+            */
+                async function createUser() {
+
+                    const [passwordKey, salt] = await CryptoUtilObject.createUserWrapUnwrapKey(username, password, null);
+                    //Create a future user key for next encryption
+                    const [futureKey, futureSalt] = await CryptoUtilObject.createUserWrapUnwrapKey(username, password, null);
+                    //When we have the username and the password key we save these in the user-object
+                    //The user has a public mail box with an assymetric keypair, this can be used to send encrypted info to the user 
+                    const [userPublicMailboxKey, [wrappedPrivateRSAKey, ivPrivKey]] = await CryptoUtilObject.createPublicPrivateKeyPairForUserMailbox(passwordKey);
+
+                    //The userid is the
+                    //The AES-GCM key is used to encrypt the entire profile and is wrapped with the iv-variable as salt. Must be decrypted with the iv/user-wrapping/unwrapping-key combination
+                    const [userProfileKey, iv] = await CryptoUtilObject.generateAESGCMUserSecretKey(passwordKey);
+                    const userToAdd = new User(username, new Password(passwordKey, salt), {
+                        userId: usernameListLength - 1,
+                        //This public user key can be used to encrypt contents for the user mailbox
+                        publicMailboxKey: userPublicMailboxKey,
+                        //The mailboxPriv key, used for decryption of mailbox contents is saved in authparameters. It is wrapped with the user-wrapping/unwrapping key
+                        mailboxPrivKey: wrappedPrivateRSAKey,
+                        //The wrapping is done with a salt, saved un iv(initilization vector - RSA private key)
+                        ivPrivKey: ivPrivKey,
+
+                        wrappedUserTableEncryptionKey: userProfileKey,
+                        //Should be given upon unwrapping
+                        ivWrappedUserTableEncryptionKey: iv,
+                        nextKey: { nextKey: futureKey, nextSalt: futureSalt },
+                        associatedProjectHashValues: null
+                    }, new MailBox(userPublicMailboxKey, [""], null));
+                    //We encrypt the userprofile with the unwrapped userProfileKey - The password.salt must be posted unencrypted before the user-base64string, so that we can see if we can unwrap the aesgcmkey
+                    const unwrappedProfileKey = await CryptoUtilObject.unwrapKey(userProfileKey, passwordKey, iv as Uint8Array, false);
+                    const [ivUserProfile, encryptedUserProfile] = await CryptoUtilObject.encrypt(userToAdd, unwrappedProfileKey, false);
+                    //saltpbkdf8:${salt}:UserprofileKey${userProfileKey}:ivUserProfileKey${iv}:encryptedData${encryptedUserProfile} - salt used to generate the unwrappingkey, userprofilekey is unwrapped with that password based key and the ivUserProfilekey and
+                    // then => Decrypts the userprofile
+                    const userTableEntry = CryptoUtilObject.encodeBase64(`${salt}:${userProfileKey}:${iv}:${ivUserProfile!}:${encryptedUserProfile}`);
+
+
+                    return { userTableEntry, userToAdd };
+                }
 
             });
-            if (
-                json) {
-
-                //The list comes in base64-encoded format, we decode it
-                const decodedJson = CryptoUtilObject.decodeBase64(json);
-                console.log(decodedJson);
-                const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
-
-                //CryptoUtilObject.decrypt(decodedJson[1],null, decodedJson[])
-                await CryptoUtilObject.decrypt(dataBuffer, null, ivBuffer, false).then(async (val) => {
-                    if (val!.includes(username)) {
-                        // If username is included we want to throw an error
-                        throw new Error("Username was taken, please try another one!");
-
-                    }
-                    else {
-                        //Add new username to usernameList
-                        val += ` ${username}`;
-                        console.log(val);
-                        return await CryptoUtilObject.encrypt(val!, null, false);
-
-                    }
 
 
 
-
-                }).then((encryptedData) => {
-                    return CryptoUtilObject.encodeBase64(`${encryptedData![0]}:${encryptedData![1]}`);
-
-                }).then((base64String) => {
-                    // We post it to the username list
-                    return fetch(usernameUrl, FirebaseURLBuilder.generateOptions("PUT", base64String))
-
-                }).then((response) => {
-                    if (response.ok) {
-                        console.log(response);
-
-                    }
-                    else {
-
-                        throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /username`);
-                    }
-                });
-
-                //We create the user-keys 
-                const { userTableEntry, userToAdd } = await createUser();
-                await this.createMailBox(userToAdd.authParameters.userId, userToAdd.authParameters.publicMailboxKey);
+            return await response;
 
 
-                //Now we post it the user into /user/{Userid}
-
-                await fetch(FirebaseURLBuilder.getEndpointURL(`/user/${usernameListLength - 1}.json`), FirebaseURLBuilder.generateOptions("PUT", userTableEntry)).then((response) => {
-
-                    if (response.ok) {
-                        console.log(response);
-                    }
-                    else {
-                        throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /users`);
-
-                    }
-                });
-                this.currentUser = userToAdd;
-                return userToAdd;
-            }
-            else {
-
-                // response.ok <=> List does not exist yet <=> Any username is okay <=> We do first time set-up, but first we add the username to the usernamelist and encrypt the list using the application key :
-
-                const usernameList = CryptoUtilObject.encrypt([username].toString(), null, false).then((val) => {
-                    console.log(val);
-                    return CryptoUtilObject.encodeBase64(`${val![0]}:${val![1]}`);
-                }).then((base64String) => {
-                    // We post it to the username list
-                    return fetch(usernameUrl, FirebaseURLBuilder.generateOptions("PUT", base64String))
-
-                }).then((response) => {
-                    if (response.ok) {
-                        console.log(response);
-
-                    }
-                    else {
-
-                        throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /username`);
-                    }
-
-                }).catch((error) => console.log(error));
-
-                //First we create the password/username-based wrapping/unwrapping key - This is saved under user.password
-                const { userTableEntry, userToAdd } = await createUser();
-                await this.createMailBox(userToAdd.authParameters.userId, userToAdd.authParameters.publicMailboxKey);
-
-                //Now we post it the user into /user/{Userid}
-
-                await fetch(FirebaseURLBuilder.getEndpointURL("/user/0.json"), FirebaseURLBuilder.generateOptions("PUT", userTableEntry)).then((response) => {
-
-                    if (response.ok) {
-                        console.log(response);
-                    }
-                    else {
-                        throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /users`);
-
-                    }
-                });
-
-                this.currentUser = userToAdd;
-                return userToAdd;
-
-
-            }
-
-            /**
-        * 
-        * @returns {Promise<{
-        *      userTableEntry: string;
-        *      userToAdd: User;
-        *  }>} - The base64 encoded user-object for entry into /user-table and the User-object
-        * 
-        * @see | {@linkcode User} |
-        */
-            async function createUser() {
-
-                const [passwordKey, salt] = await CryptoUtilObject.createUserWrapUnwrapKey(username, password, null);
-                //Create a future user key for next encryption
-                const [futureKey, futureSalt] = await CryptoUtilObject.createUserWrapUnwrapKey(username, password, null);
-                //When we have the username and the password key we save these in the user-object
-                //The user has a public mail box with an assymetric keypair, this can be used to send encrypted info to the user 
-                const [userPublicMailboxKey, [wrappedPrivateRSAKey, ivPrivKey]] = await CryptoUtilObject.createPublicPrivateKeyPairForUserMailbox(passwordKey);
-
-                //The userid is the
-                //The AES-GCM key is used to encrypt the entire profile and is wrapped with the iv-variable as salt. Must be decrypted with the iv/user-wrapping/unwrapping-key combination
-                const [userProfileKey, iv] = await CryptoUtilObject.generateAESGCMUserSecretKey(passwordKey);
-                const userToAdd = new User(username, new Password(passwordKey, salt), {
-                    userId: usernameListLength - 1,
-                    //This public user key can be used to encrypt contents for the user mailbox
-                    publicMailboxKey: userPublicMailboxKey,
-                    //The mailboxPriv key, used for decryption of mailbox contents is saved in authparameters. It is wrapped with the user-wrapping/unwrapping key
-                    mailboxPrivKey: wrappedPrivateRSAKey,
-                    //The wrapping is done with a salt, saved un iv(initilization vector - RSA private key)
-                    ivPrivKey: ivPrivKey,
-
-                    wrappedUserTableEncryptionKey: userProfileKey,
-                    //Should be given upon unwrapping
-                    ivWrappedUserTableEncryptionKey: iv,
-                    nextKey: { nextKey: futureKey, nextSalt: futureSalt },
-                    associatedProjectHashValues : null
-                }, new MailBox(userPublicMailboxKey, [""], null, fbClient));
-                //We encrypt the userprofile with the unwrapped userProfileKey - The password.salt must be posted unencrypted before the user-base64string, so that we can see if we can unwrap the aesgcmkey
-                const unwrappedProfileKey = await CryptoUtilObject.unwrapKey(userProfileKey, passwordKey, iv as Uint8Array, false);
-                const [ivUserProfile, encryptedUserProfile] = await CryptoUtilObject.encrypt(userToAdd, unwrappedProfileKey, false);
-                //saltpbkdf8:${salt}:UserprofileKey${userProfileKey}:ivUserProfileKey${iv}:encryptedData${encryptedUserProfile} - salt used to generate the unwrappingkey, userprofilekey is unwrapped with that password based key and the ivUserProfilekey and
-                // then => Decrypts the userprofile
-                const userTableEntry = CryptoUtilObject.encodeBase64(`${salt}:${userProfileKey}:${iv}:${ivUserProfile!}:${encryptedUserProfile}`);
-
-
-                return { userTableEntry, userToAdd };
-            }
-
-        });
-
-
-
-        return await response;
-
-
-    }
+        }
 
 
     /**
@@ -745,7 +786,7 @@ export class FirebaseAPIClient {
 
     }
 
-    
+
     async loginUser(username: string, password: string) {
 
         const firebaseApiClient = this;
@@ -828,16 +869,23 @@ export class FirebaseAPIClient {
                         console.log(decryptedData);
 
                         let user: User = JSON.parse(decryptedData!) as User;
-                        user = instantiateUser(user, firebaseApiClient, userKey,futureUserKey, futureSalt);
 
                         const mailBoxPrivKey = new Uint8Array(Object.values(user.authParameters.mailboxPrivKey));
                         const mailBoxIv = new Uint8Array(Object.values(user.authParameters.ivPrivKey));
 
-                        const userPrivKey = await CryptoUtilObject.unwrapKey(mailBoxPrivKey, userKey, mailBoxIv, true);
-                        //We set up an eventsource for the logged in user´s mailbox
-                        const mailBoxEventSource = await this.setMailboxListener(user, userPrivKey!);
+                        const unwrappedMailboxPrivKey = await CryptoUtilObject.unwrapKey(mailBoxPrivKey.buffer, userKey, mailBoxIv, true);
 
-                      
+                        user.authParameters.mailboxPrivKey = mailBoxPrivKey.buffer;
+                        user.authParameters.ivPrivKey = mailBoxIv;
+
+
+
+                        user = instantiateUser(user, firebaseApiClient, userKey, futureUserKey, futureSalt);
+
+                        //We set up an eventsource for the logged in user´s mailbox
+                        const mailBoxEventSource = await this.setMailboxListener(user, unwrappedMailboxPrivKey!);
+
+
 
                         user.mailbox.setEventSource(mailBoxEventSource);
 
@@ -868,9 +916,10 @@ export class FirebaseAPIClient {
          * @param futureSalt - The salt used to generate the new wrapping/unwrapping key
          * @returns {User} -The user table entry as a instantiated user-object
          */
-        function instantiateUser(user: User, firebaseApiClient: FirebaseAPIClient,currentUserKey : CryptoKey ,futureUserKey: CryptoKey, futureSalt: Uint8Array<ArrayBuffer>) {
+        function instantiateUser(user: User, firebaseApiClient: FirebaseAPIClient, currentUserKey: CryptoKey, futureUserKey: CryptoKey, futureSalt: Uint8Array<ArrayBuffer>) {
             //Eventsource always null when deserializing, instantiated per session via this.setMailboxListener()
-            user = new User(user.username.username, new Password(currentUserKey, user.password.salt), { nextKey: { nextKey: futureUserKey, nextSalt: futureSalt }, ivPrivKey: user.authParameters.ivPrivKey, userId: user.authParameters.userId, ivWrappedUserTableEncryptionKey: user.authParameters.ivWrappedUserTableEncryptionKey, mailboxPrivKey: user.authParameters.mailboxPrivKey, publicMailboxKey: user.authParameters.publicMailboxKey, wrappedUserTableEncryptionKey: user.authParameters.wrappedUserTableEncryptionKey, associatedProjectHashValues : user.authParameters.associatedProjectHashValues }, new MailBox(user.mailbox.publicKey, user.mailbox.contents, null, firebaseApiClient));
+
+            user = new User(user.username.username, new Password(currentUserKey, user.password.salt), { nextKey: { nextKey: futureUserKey, nextSalt: futureSalt }, ivPrivKey: user.authParameters.ivPrivKey, userId: user.authParameters.userId, ivWrappedUserTableEncryptionKey: user.authParameters.ivWrappedUserTableEncryptionKey, mailboxPrivKey: user.authParameters.mailboxPrivKey, publicMailboxKey: user.authParameters.publicMailboxKey, wrappedUserTableEncryptionKey: user.authParameters.wrappedUserTableEncryptionKey, associatedProjectHashValues: user.authParameters.associatedProjectHashValues }, new MailBox(user.mailbox.publicKey, user.mailbox.contents, null));
             console.log(user);
             return user;
         }
@@ -881,8 +930,9 @@ export class FirebaseAPIClient {
      */
     async logOut() {
 
+
         //- We now use the nextKey to wrap, using different salts on each login for the pbkdf generation
-        let unwrappedPrivKey = await CryptoUtilObject.unwrapKey(this.currentUser?.authParameters.ivPrivKey!, this.currentUser?.password.passwordKey!, this.currentUser?.authParameters.ivPrivKey!, true);
+        let unwrappedPrivKey = await CryptoUtilObject.unwrapKey(this.currentUser?.authParameters.mailboxPrivKey!, this.currentUser?.password.passwordKey!, this.currentUser?.authParameters.ivPrivKey!, true);
         const [mailboxPrivKey, mailBoxPrivKeyIv] = await CryptoUtilObject.wrapPrivateKey(unwrappedPrivKey, this.currentUser?.authParameters.nextKey.nextKey!);
         const [userTableEntryEncryptionKey, userTableEntryEncryptionKeyIv] = await CryptoUtilObject.generateAESGCMUserSecretKey(this.currentUser?.authParameters.nextKey.nextKey!);
         /**
@@ -894,7 +944,7 @@ export class FirebaseAPIClient {
             {
                 ivPrivKey: mailBoxPrivKeyIv, mailboxPrivKey: mailboxPrivKey, ivWrappedUserTableEncryptionKey: userTableEntryEncryptionKeyIv,
                 publicMailboxKey: this.currentUser?.authParameters.publicMailboxKey!,
-                userId: this.currentUser?.authParameters.userId, wrappedUserTableEncryptionKey: userTableEntryEncryptionKey, associatedProjectHashValues : this.currentUser?.authParameters.associatedProjectHashValues!
+                userId: this.currentUser?.authParameters.userId, wrappedUserTableEncryptionKey: userTableEntryEncryptionKey, associatedProjectHashValues: this.currentUser?.authParameters.associatedProjectHashValues!
             }, this.currentUser?.mailbox);
 
         //Encryption and base64-encoding
@@ -902,7 +952,7 @@ export class FirebaseAPIClient {
         const unwrappedUserTableEntryEncryptionKey = await CryptoUtilObject.unwrapKey(userTableEntryEncryptionKey, userEntry.password.passwordKey, userTableEntryEncryptionKeyIv, false);
 
         const [encryptedUserDataIv, encryptedUserData] = await CryptoUtilObject.encrypt(userEntry, unwrappedUserTableEntryEncryptionKey, false);
-        const userTableEntry = CryptoUtilObject.encodeBase64(`${this.currentUser?.password.salt}:${userTableEntryEncryptionKey}:${userTableEntryEncryptionKeyIv}:${encryptedUserDataIv!}:${encryptedUserData}`);
+        const userTableEntry = CryptoUtilObject.encodeBase64(`${userEntry.password.salt}:${userTableEntryEncryptionKey}:${userTableEntryEncryptionKeyIv}:${encryptedUserDataIv!}:${encryptedUserData}`);
 
         await fetch(FirebaseURLBuilder.getEndpointURL(`/user/${this.currentUser?.authParameters.userId}.json`), FirebaseURLBuilder.generateOptions("PUT", userTableEntry)).then((response) => {
 

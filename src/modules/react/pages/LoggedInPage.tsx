@@ -1,74 +1,66 @@
-import { useContext } from "react";
+import * as React from "react";
 import { ThemeValues } from "../../theme";
-import { User } from "../../User";
 import { State } from "../components/App";
 import { Background } from "../components/background";
 import { CreateProjectTab } from "../components/CreateProjectTab";
 import { Footer } from "../components/Footer";
 import { Header, HeaderProps } from "../components/Header";
 import { InboxTab } from "../components/InboxTab";
-import { TabRow, TabRowProps } from "../components/TabRow";
 import { ThemeSelector } from "../components/ThemeSelector";
 import { themeContext } from "../context/ThemeContext";
-import { ProjectCreationForm } from "../components/ProjectCreationForm";
-import React from "react";
+import { Button } from "../components/Button";
+import { MailboxStore, UserStore } from "../store/UserStore";
+import { TabPage } from "../components/TabPage";
+import { ProjectsTab } from "../components/ProjectsTab";
 
 
 
 
-export function LoggedInPage({loading, userState, themeState, createProject, setProjectFormState, projectFormState }: {
-        setProjectFormState: React.Dispatch<React.SetStateAction<{
-                projectTitle: string;
-                projectDescription: string;
-                projectStartTime: string;
-                projectEndTime: string;
-                projectManagers: string;
-                projectDevelopers: string;
-                projectClients: string;
-        }>>;
-        projectFormState: {
-                projectTitle: string;
-                projectDescription: string;
-                projectStartTime: string;
-                projectEndTime: string;
-                projectManagers: string;
-                projectDevelopers: string;
-                projectClients: string;
-        };
-     createProject: (
-                projectTitle: string,
-                projectDescription: string,
-                projectStartTime: string,
-                projectEndTime: string,
-                projectManagers: string,
-                projectDevelopers: string,
-                projectClients: string,
-        ) => void;
-}): React.ReactNode {
+export function LoggedInPage({loading, themeState,  } : {loading : boolean; themeState : State<ThemeValues>}
+): React.ReactNode {
           const [activeTabNumber, setActiveTab] = React.useState(0);
           const activeTabNumberState: State<number> = {
                 setState: setActiveTab,
                 stateVariable: activeTabNumber
         };
-         const appThemeContext = useContext(themeContext);
-        // const tabPageHeaderProps: HeaderProps = {
-        //         cssClassName: "tab-page-header",
-        //         title: `Welcome : ${userState?.username.username}`,
-        //         titleClassName: "header-welcome-message"
+         const appThemeContext = React.useContext(themeContext);
 
-        // };
+         const userState = React.useSyncExternalStore(UserStore.subscribe, UserStore.getSnapshotUser);
+         const mailboxState = React.useSyncExternalStore(MailboxStore.subscribe, MailboxStore.getSnapshotMailbox);
+
+        const tabPageHeaderProps: HeaderProps = {
+                cssClassName: "tab-page-header",
+                title: `Welcome : ${userState?.username.username}`,
+                titleClassName: "header-welcome-message"};
 
         // const tabRowProps: TabRowProps = {
         // <CreateProjectTab createProject={createProject} setCreateProjectState={setProjectFormState}  inputState={projectFormState}></CreateProjectTab>
         //         activeTabNumberState: activeTabNumberState,
         //         pageNames: ["Schedule", "Projects", "Inbox", "Create project"]
         // }
+
+       function handleLogOutClick(e : React.MouseEvent<HTMLButtonElement, MouseEvent>){
+                //Make sure submit isn´t run
+                e.preventDefault();
+                e.stopPropagation();
+
+                UserStore.logOut().then(()=>{
+                        //page change is handled at <App> level
+                        alert("You have been logged out!")
+                
+                });
+
+
+
+
+        }
         return (
-               
+               <>
                 <Background  cssClassName='mainBackground' backgroundColor={appThemeContext.primaryBackgroundColor}>
                         
                         <Header  headerColor={appThemeContext.primaryBackgroundColor}>
-
+                                <h3>{`Welcome ${userState?.username.username}`}</h3>
+                                <Button isDisabled={false} cssClassName="log-out-button" children={<p>{"Log out"}</p>} onClick={(e)=>(handleLogOutClick(e))} ></Button>
                         </Header>
                         {loading ? (<>
                                 <img  className="loading-indicator" src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
@@ -79,11 +71,42 @@ export function LoggedInPage({loading, userState, themeState, createProject, set
 
                         </>)}
 
-                    <CreateProjectTab createProject={createProject}></CreateProjectTab>
+                    <TabPage tabRowProps={{
+                                pageNames: ["Create Project", "Inbox", "Projects"],
+                                activeTabNumberState: {
+                                        stateVariable: activeTabNumberState.stateVariable,
+                                        setState: activeTabNumberState.setState
+                                }
+                        }} tabs={function (tabState: number): React.ReactNode {
+                                switch(activeTabNumberState.stateVariable){
+
+                                                case 0 : {
+
+                                                  return ( <>
+                                                                <CreateProjectTab></CreateProjectTab>
+                                                        </>)
+                                                }
+                                                break;
+                                                case 1 : {
+                                                        return (<><InboxTab mailBoxContents={mailboxState!}></InboxTab>
+                                                                </>
+                                                        )
+                                                }
+                                                break;
+                                                case 2 : {
+                                                        return (<><ProjectsTab></ProjectsTab>
+                                                        </>)
+                                                }
+                                                break;
+                                                default: break;
+                               }
+                        } } headerProps={tabPageHeaderProps}></TabPage>
                               
                         <Footer  content={<ThemeSelector  themeState={themeState}></ThemeSelector>} />
 
                 </Background>
-        
-        );
+        </>
+        )
+
+
 }

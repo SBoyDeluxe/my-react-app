@@ -85,13 +85,7 @@ export class Project {
      * that the client specifies and that then gets delegated to the developer team
      * @memberof Project
      */
-    private _description!: string;
-    public get description(): string {
-        return this._description;
-    }
-    public set description(value: string) {
-        this._description = value;
-    }
+    description : string ;
     /**The proposed timewindow for the project : Where all of the feature and task-timeconstraints take place
      * 
      * @memberof Project
@@ -285,6 +279,11 @@ export class Project {
             this.developerTeamTypes = (devTeamTypes) ?this.developerTeamTypes.concat(devTeamTypes) : devTeamTypes;
         }
     }
+    }
+
+    setProjectKeyObject(projectKeyObject : ProjectKeyObject){
+
+        this.projectKeyObject = new Promise<ProjectKeyObject>((resolve)=> resolve(projectKeyObject));
     }
 
 

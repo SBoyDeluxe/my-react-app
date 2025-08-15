@@ -5,15 +5,19 @@ import { LoadingStore } from "../components/LoadingStore";
 import { CryptoUtilObject } from "../../Cryptography_Util";
 import { useNavigate } from "react-router";
 import { MailContent } from "../../mailbox";
+import { Project } from "../../project";
 
 
 export const firebaseClient = new FirebaseAPIClient();
 //Done here so that the whole app uses the same client
 export const firebaseClientContext = createContext<FirebaseAPIClient>(firebaseClient);
 let user: User | null = null;
+let projects : Project[]|null = null; 
 //let isLoading : boolean = false;
 let listernMailboxStore: any[] = [];
 let listernersUserStore: any[] = [];
+let listenerProjectStore : any[] = [];
+
 
 
 
@@ -24,6 +28,11 @@ function emitChangeUser() {
 };
 function emitChangeMailbox() {
   for (let listener of listernMailboxStore) {
+    listener();
+  }
+};
+function emitChangeProjectStore() {
+  for (let listener of listenerProjectStore) {
     listener();
   }
 };
@@ -71,14 +80,16 @@ export const UserStore = {
     });
 
   },
-  logOut() {
+  async logOut() {
     LoadingStore.updateLoading();
 
-    firebaseClient.logOut().then(()=>{
+    await firebaseClient.logOut().then(()=>{
           LoadingStore.updateLoading();
 
       user = null;
     emitChangeUser();
+    
+
     });
     
   },
@@ -98,12 +109,12 @@ export const UserStore = {
 }
 
 
-const MailboxStore = {
+ export const MailboxStore = {
 
   subscribe(listener: any) {
-    listernersUserStore = [...listernersUserStore, listener];
+    listernMailboxStore = [...listernMailboxStore, listener];
     return () => {
-      listernersUserStore = listernersUserStore.filter(l => l !== listener);
+      listernMailboxStore = listernMailboxStore.filter(l => l !== listener);
     }
   },
   getSnapshotMailbox() {
@@ -124,9 +135,50 @@ const MailboxStore = {
       alert("Message(s) sent!");
     });
 
+    
+
   }
 
 
+
+
+}
+
+
+export const ProjectStore = {
+
+  subscribe(listener: any) {
+    listenerProjectStore = [...listenerProjectStore, listener];
+    return () => {
+      listenerProjectStore = listenerProjectStore.filter(l => l !== listener);
+    }
+  },
+
+   getSnapshotProjects(){
+    return projects;
+
+    
+  },
+
+  getProjects(){
+
+    const projectInvites = user?.mailbox.getProjectInvites();
+    
+    if(projectInvites !== undefined){
+      LoadingStore.updateLoading();
+
+    const promises =  projectInvites?.map((invite)=>firebaseClient.readProject({projectIndex:invite.projectIndex, projectKey:invite.webKey}));
+      Promise.all(promises).then((projectVals)=>{
+        
+        projects =projectVals;
+        console.log(projectVals);
+        console.log(projects);
+      LoadingStore.updateLoading();
+      });
+      
+
+    }
+  }
 
 
 }

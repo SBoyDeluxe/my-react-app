@@ -1,20 +1,213 @@
-import { useSyncExternalStore } from "react";
-import { User } from "../../User";
-import { UserStore } from "../store/UserStore";
+import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent } from "react";
+import { Developer, User } from "../../User";
+import { firebaseClientContext, ProjectStore, UserStore } from "../store/UserStore";
+import { Project } from "../../project";
+import { LoadingStore, useLoadingStore } from "./LoadingStore";
+import { Background } from "./background";
+import { themeContext } from "../context/ThemeContext";
+import { ProgressBar } from "./ProgressBar";
+import { TimeConstraints } from "../../Timeconstraints";
+import { FieldSetOptions, Form } from "./Form";
+import { Input } from "./Input";
+import { Button } from "./Button";
+
 
 
 export type ProjectsTabProp = {
     /**
      * 
      */
-    projectList : string[],
+    projectList: string[],
+
+}
+
+export function ProjectsTab() {
+
+    const projectStore = useSyncExternalStore(ProjectStore.subscribe, ProjectStore.getSnapshotProjects);
+    let loadingStore = useLoadingStore();
+    const appThemeContext = useContext(themeContext);
+    useEffect(() => ProjectStore.getProjects, []);
+    let activeProjects: Project[] | null = projectStore;
+
+
+    function getTimeFraction(timeConstraints: TimeConstraints) {
+
+        const startDate = Date.parse(timeConstraints._startdate);
+        const endDate = Date.parse(timeConstraints._enddate);
+
+        const currentDate = Date.now();
+
+        const totalTime = endDate - startDate;
+
+        const timePassed = currentDate - startDate;
+
+        return timePassed / totalTime * 100;
+
+
+    }
+
+
+
+    return (<>
+        {loadingStore ? (<>
+            <img className="loading-indicator" src='https://icons8.com/preloaders/preloaders/1480/Fidget-spinner-128.gif'>
+
+            </img>
+        </>) : (<>
+
+
+        </>)}
+
+        {
+            activeProjects !== null && (
+
+                <>
+                    {activeProjects.map((project) => {
+
+
+                        return (
+                            <Background cssClassName="project-details-container" backgroundColor={appThemeContext.tertiaryContentColor}>
+                                <ProgressBar barColor={appThemeContext.tertiaryContrastColor} progress={(getTimeFraction(project.timeconstraints))} />
+                                <details className="project-details-element" >
+                                    <summary><b>{`${project.title} : ${project.timeconstraints.startdate} -> ${project.timeconstraints.enddate}`} </b></summary>
+
+                                    <details>
+                                        <summary> {"Features : "} </summary>
+
+                                        <Form >
+
+                                        </Form>
+
+
+                                    </details>
+                                    <details>
+                                        <summary> {"Participants :"} </summary>
+                                    </details>
+                                    <details>
+                                        <summary> </summary>
+                                    </details>
+
+                                </details>
+
+                            </Background>
+                        )
+                    })}
+                </>
+            )
+
+        }
+    </>)
+
+}
+type AddFeaturesElementProps = {
+    /**
+     * The dev team assigned to the specific project or null if none are.
+     * 
+     * Will be used to give suggestions for appropriate developers, that is, devs that belong to the project already in 
+     * second hand and that has the type of the thought feature, if such a type has been set, in first hand
+     */
+    projectDevTeam : Developer[]|null,
+    /**
+     * The time constraints of the project, we do not accept features that go outside of these bounds
+     */
+    projectTimeConstraints : TimeConstraints,
+
+
+
+
     
 }
 
-export function ProjectsTab(){
+function AddFeaturesElement({projectDevTeam, projectTimeConstraints}:AddFeaturesElementProps) {
 
-    const userStore = useSyncExternalStore(UserStore.subscribe, UserStore.getSnapshotUser);
+    const featureLegendText: ReactNode = (<><b><p>{"Add feature : "}</p></b></>);
 
-    const mailBox = userStore?.mailbox;
+    const [addFeatureState, setAddFeatureState]  = useState({
+                featureTitleInput : "",
+                featureDescriptionInput : "",
+                featureTypeInput : "",
+                featureStartTime : "",
+                featureEndTime : "",
+                developerInput : ""
+    });
 
+    const addFeatureFieldSetOptions: FieldSetOptions = {
+        children: featureLegendText
+    };
+    const timeConstraintLegendText: ReactNode = (<><b><p>{"Set time-constraints : "}</p></b></>);
+    const timeConstraintsFieldSetOptions: FieldSetOptions = {
+        children: timeConstraintLegendText
+    };
+    const devAssignLegendText: ReactNode = (<><b><p>{"Assign Developers : "}</p></b></>);
+    const devAssignFieldSetOptions: FieldSetOptions = {
+        children: devAssignLegendText
+    };
+
+    function handleChange(e: ChangeEvent<HTMLInputElement>){
+
+        e.stopPropagation();
+
+        setAddFeatureState((prevState)=>{
+            return ({...prevState,
+            [e.target.name] : e.target.value});
+        });
+    }
+
+    function handleInput(e : React.FormEvent<HTMLInputElement>){
+
+        e.stopPropagation();
+
+        setAddFeatureState((prevState)=>{
+
+            return ({
+
+                ...prevState,
+                [e.target.name] : e.target.value
+            });
+        });
+    }
+
+    function handleSubmitFeature(e : React.MouseEvent<HTMLButtonElement, MouseEvent>){
+        e.preventDefault();
+        e.stopPropagation();
+
+
+
+    }
+
+    return (
+        <>
+            <Form cssClassName="add-feature-form" fieldSetOptions={addFeatureFieldSetOptions} >
+
+                <Input inputType="text" cssClassName="feature-title-input" labelName="Title :" name="featureTitleInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureTitleInput} >
+                </Input>
+                <Input inputType="text" cssClassName="feature-description-input" labelName="Description :" name="featureDescriptionInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureDescriptionInput} >
+                </Input>
+                <Input inputType="text" cssClassName="feature-type-input" labelName="Feature-type :" name="featureTypeInput" onEvent={handleChange } onInput={handleInput} inputState={addFeatureState.featureTypeInput} >
+                </Input>
+
+
+            </Form>
+            <Form fieldSetOptions={timeConstraintsFieldSetOptions} cssClassName="time-constraints-add-form" >
+                <Input min={Date.now().toLocaleString()} max={projectTimeConstraints.enddate} onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureStartTime} inputType="datetime-local" labelName="Start time :" name="featureStartTime" cssClassName="project-start-time-input" />
+                <Input min={Date.now().toLocaleString()} max={projectTimeConstraints.enddate} onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
+
+            </Form>
+
+            <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions} >
+
+                <Input list="devs" cssClassName="dev-assignment-input" inputType="text" labelName="Add developers :" name="developerInput" inputState={addFeatureState.developerInput} onEvent={handleChange} onInput={handleInput} >
+                </Input>
+                <datalist id="devs">
+                   
+                </datalist>
+
+
+
+            </Form>
+
+            <Button onClick={handleSubmitFeature} isDisabled={false} cssClassName="add-feature-button"  > {"Submit feature : "}</Button>
+        </>
+    );
 }
+

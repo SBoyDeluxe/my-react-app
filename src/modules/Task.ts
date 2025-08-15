@@ -152,7 +152,7 @@ export class Task {
     public assignDevelopers(developersToAssign: Developer[], goalToAssignDevelopers: Task | null) {
         //We check if the assigned developers contain any of the developers to assign if goalToAssignDevelopers == null 
         // => We should only assign  developers to the task and must check for doubles
-        if (goalToAssignDevelopers == null) {
+        if (goalToAssignDevelopers === null) {
             developersToAssign.filter((developerToAssign) => !(this.assignedDevelopers?.includes(developerToAssign))).map((newDev) => this.assignedDevelopers?.push(newDev));
         }
         else {
