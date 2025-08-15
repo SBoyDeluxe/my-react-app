@@ -1,4 +1,4 @@
-import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent, Key } from "react";
+import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent, Key, useReducer, Fragment } from "react";
 import { Developer, User } from "../../User";
 import { firebaseClientContext, ProjectStore, UserStore } from "../store/UserStore";
 import { Project } from "../../project";
@@ -10,6 +10,11 @@ import { TimeConstraints } from "../../Timeconstraints";
 import { FieldSetOptions, Form } from "./Form";
 import { Input } from "./Input";
 import { Button } from "./Button";
+import { FeatureReducer } from "./reducers/FeatureReducer";
+import { start } from "repl";
+import { Feature } from "../../feature";
+import { features } from "process";
+import { Task } from "../../Task";
 
 
 
@@ -28,6 +33,8 @@ export function ProjectsTab() {
     const appThemeContext = useContext(themeContext);
     useEffect(() => ProjectStore.getProjects, []);
     let activeProjects: Project[] | null = projectStore;
+
+    const [state, dispatcher] = useReducer(FeatureReducer, null);
 
 
     function getTimeFraction(timeConstraints: TimeConstraints) {
@@ -48,18 +55,34 @@ export function ProjectsTab() {
 
     if (activeProjects !== null) {
 
-        const numberOfActiveProjects = activeProjects.length;
-
-        keysNeededForList = new Array<Key>(numberOfActiveProjects);
-
-        for (let i = 0; i < numberOfActiveProjects; i++) {
-
-            keysNeededForList[i] = window.crypto.randomUUID();
-        }
+        keysNeededForList = getKeysForList(activeProjects);
 
 
 
     }
+
+    function handleSubmitFeature(title: string, description: string, type: string, timeconstraints: TimeConstraints, developersAssigned: Developer[] | null) {
+
+
+        //Can always be called, instantiates a Feature[] if none exists
+        // action.type : ADD_FEATURE {
+        //      action.payload.title : string,
+        //      action.payload.type : string,
+        //      action.payload.description : string,
+        //      //timeconstraints must be given for a feature
+        //      action.payload.timeconstraints : TimeConstraints,
+        //      //if developmentTasks are left as null, the first dev-task becomes "Plan project" with all assigned devs assigned to it
+        //      action.payload.developmentTasks : Task[]|null,
+        //      action.payload.assignedDevelopers : Developer[] | null,
+
+
+        //  }
+        new Task(type, `Plan development of ${title}`, timeconstraints )
+        const action = { type: "ADD_FEATURE", payload: { title: title, description: description, type: type, timeconstraints: timeconstraints, developmentTasks: null, assignedDevelopers: developersAssigned } }
+        dispatcher(action);
+
+    }
+
 
 
 
@@ -82,24 +105,29 @@ export function ProjectsTab() {
 
                         return (
                             <Background key={keysNeededForList[index]} cssClassName="project-details-container" backgroundColor={appThemeContext.tertiaryContentColor}>
+
                                 <ProgressBar barColor={appThemeContext.tertiaryContrastColor} progress={(getTimeFraction(project.timeconstraints))} />
                                 <details className="project-details-element"  >
                                     <summary><b>{`${project.title} : ${project.timeconstraints._startdate} -> ${project.timeconstraints._enddate}`} </b></summary>
 
-                                    <details>
-                                        <summary> {"Features : "} </summary>
 
-                                        <AddFeaturesElement projectDevTeam={project.developerTeam} projectTimeConstraints={project.timeconstraints}>
+
+
+
+                                    <details className="add-features-details-element" >
+                                        <summary>{"Add feature"}</summary>
+                                        <AddFeaturesElement onSubmitFeature={handleSubmitFeature} projectDevTeam={project.developerTeam} projectTimeConstraints={project.timeconstraints}>
 
                                         </AddFeaturesElement>
 
+                                    </details>
+                                    
+                                    <details>
+                                        <summary> {"Feature overview : "}</summary>
 
-                                    </details>
-                                    <details>
-                                        <summary> {"Participants :"} </summary>
-                                    </details>
-                                    <details>
-                                        <summary> </summary>
+                                        <FeatureOverview features={state}  />
+
+                                        
                                     </details>
 
                                 </details>
@@ -127,13 +155,111 @@ type AddFeaturesElementProps = {
      */
     projectTimeConstraints: TimeConstraints,
 
+    onSubmitFeature: (title: string, description: string, type: string, timeconstraints: TimeConstraints, developersAssigned: Developer[] | null) => void
+
 
 
 
 
 }
 
-function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeaturesElementProps) {
+type FeatureOverviewProps = {
+
+    features: Feature[] | null
+}
+
+function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
+
+    if (features === null) {
+
+        return <></>
+    }
+    else {
+        return features.map((feature, index) => {
+            // const activeTasks = feature.getActiveDevelopmentTasks();
+            // const pendingTasks = feature.getPendingDevelopmentTasks();
+            // const numberOfPendingTasks = pendingTasks.length;
+            // const numberOfActiveTasks = activeTasks.length;
+            // const numberOfCompletedTasks = feature.developmentTasks.length - (numberOfActiveTasks + numberOfPendingTasks);
+
+
+            // const progress = feature.getProgress();
+            //We need to generate a number of rows accomodating the largest of the active, pending or complete tasks : this array is sorted from largest to smallest
+            // let amountOfDifferentTasks = [numberOfActiveTasks, numberOfCompletedTasks, numberOfPendingTasks].sort((numberA, numberB) => {
+            //     return numberB - numberA;
+            // });
+            let assignedDevList: ReactNode = (<></>);
+            let assignedFeatureDevelopers = feature.assignedDevelopers;
+            if (assignedFeatureDevelopers !== null) {
+                const keys = getKeysForList(assignedFeatureDevelopers);
+                assignedDevList = assignedFeatureDevelopers?.map((dev, index) => {
+                    const devTypeElement = (dev.developerType[0] !== "") ? `(${dev.developerType})` : "";
+                    return (
+                        <li key={keys[index]}>{dev.username} {devTypeElement}</li>
+                    );
+                });
+            }
+
+
+
+            return (
+
+                <Background cssClassName="feature-overview">
+                    <h3> {`${feature.title} ${feature.type ? `(${feature.type})` : ""}`} </h3>
+                    <textarea defaultValue={feature.description}/>
+
+
+                    <details>
+                        <summary>{"Task-schedule : "}</summary>
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">{"Pending tasks :"}</th>
+                                    <th scope="col">{"Active tasks :"}</th>
+                                    <th scope="col">{"Completed tasks :"}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </details>
+                    <details>
+                        <summary>{"Assigned developers :"}</summary>
+                        <ul>
+                            {assignedDevList}
+                        </ul>
+
+
+                    </details>
+                </Background>
+            );
+        }
+        );
+    }
+}
+
+/**
+ * Takes in a list and gives back a React key-array matching the length of that list
+ * 
+ * @param list - list of elements needing keys
+ * @returns Generated keys for all list members
+ */
+function getKeysForList(list: Array<T>) {
+    const numberOfMembersInlist = list.length;
+
+    let keysNeededForList: Key[] = new Array<Key>(numberOfMembersInlist);
+
+    for (let i = 0; i < numberOfMembersInlist; i++) {
+
+        keysNeededForList[i] = window.crypto.randomUUID();
+    }
+    return keysNeededForList;
+}
+
+function AddFeaturesElement({ onSubmitFeature, projectDevTeam, projectTimeConstraints }: AddFeaturesElementProps) {
 
     const featureLegendText: ReactNode = (<><b><p>{"Add feature : "}</p></b></>);
 
@@ -143,8 +269,7 @@ function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeatu
         featureTypeInput: "",
         featureStartTime: "",
         featureEndTime: "",
-        developerInput: "",
-        developersAssigned : [-1]
+        developersAssigned: [-1]
     });
 
     const addFeatureFieldSetOptions: FieldSetOptions = {
@@ -161,9 +286,9 @@ function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeatu
 
     //generate keys for each list item
 
-    let keys : Key[] = new Array(projectDevTeam?.length);
+    let keys: Key[] = new Array(projectDevTeam?.length * 2);
 
-    for(let i = 0 ; i < projectDevTeam?.length ; i++){
+    for (let i = 0; i < projectDevTeam?.length * 2; i++) {
 
         keys[i] = window.crypto.randomUUID();
     }
@@ -180,30 +305,30 @@ function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeatu
 
 
             }
-            else if (devA.developerType.includes(featureTypeInput)){
+            else if (devA.developerType.includes(featureTypeInput)) {
                 //Negative value means that first element should come before the second one
                 return -1;
             }
-            else{
+            else {
 
                 return 1;
             }
-            }
-            else{
-                //If neither includes it then they are rated equal
-                return 0;
-            }
+        }
+        else {
+            //If neither includes it then they are rated equal
+            return 0;
+        }
     }
     ).map((dev, index) => {
 
-       return (<>
+        return (
             <option value={index} key={keys[index]}> {`${dev.username} ${!(dev.developerType.includes("")) ? ` (${dev.developerType}) ` : ""}`}</option>
-        </>)
-    }) : projectDevTeam?.map((dev,index) => {
+        )
+    }) : projectDevTeam?.map((dev, index) => {
 
-       return (<>
-            <option key = {keys[index]}value={index}> {`${dev.username} ${ ` (${dev.developerType}) `}`}</option>
-        </>)
+        return (
+            <option key={keys[index]} value={index}> {`${dev.username} ${` (${dev.developerType}) `}`}</option>
+        )
     });
 
 
@@ -239,33 +364,86 @@ function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeatu
         e.stopPropagation();
 
 
+        // action.type : ADD_FEATURE {
+        //      action.payload.title : string,
+        //      action.payload.type : string,
+        //      action.payload.description : string,
+        //      //timeconstraints must be given for a feature
+        //      action.payload.timeconstraints : TimeConstraints,
+        //      //if developmentTasks are left as null, the first dev-task becomes "Plan project" with all assigned devs assigned to it
+        //      action.payload.developmentTasks : Task[]|null,
+        //      action.payload.assignedDevelopers : Developer[] | null,
+
+
+        //  }
+
+        // Must include: title, type, desc, timeConstraints, 
+        const allVariablesExist = (addFeatureState.featureTitleInput.trim() !== "") && (addFeatureState.featureTypeInput.trim() !== "") && (addFeatureState.featureDescriptionInput.trim() !== "") && (addFeatureState.featureStartTime !== "") && (addFeatureState.featureEndTime !== "");
+        if (allVariablesExist) {
+            const startDate = new Date(addFeatureState.featureStartTime);
+            const endDate = new Date(addFeatureState.featureEndTime);
+            const todaysDate = new Date(Date.now());
+
+
+            const datesAreValid = ((endDate.getTime() >= startDate.getTime()) && (endDate.getTime() >= todaysDate.getTime()));
+
+            if (datesAreValid) {
+                // Get actual developers from their indices 
+                let assignedDevs: Developer[] | null = null;
+                if (addFeatureState.developersAssigned[0] !== -1) {
+
+                    assignedDevs = addFeatureState.developersAssigned.map((developerIndex) => projectDevTeam![developerIndex]!);
+                }
+                else {
+                    assignedDevs = null;
+
+                }
+
+
+
+                const timeconstraints = new TimeConstraints(startDate, endDate);
+
+                onSubmitFeature(addFeatureState.featureTitleInput, addFeatureState.featureDescriptionInput, addFeatureState.featureTypeInput, timeconstraints, assignedDevs);
+                //Reset the fields on successful input
+                setAddFeatureState({
+                    featureTitleInput: "",
+                    featureDescriptionInput: "",
+                    featureTypeInput: "",
+                    featureStartTime: "",
+                    featureEndTime: "",
+                    developersAssigned: [-1]
+                });
+            }
+            else {
+                alert("Sorry, those dates were not valid! Make sure start date is after end date, as well as end date being at least today");
+            }
+
+        }
+        else {
+            alert("Sorry, not all the required input was confirmed, please try again! You need to at least provide : Title, description, feature type as well as start date and end date")
+        }
+
 
     }
 
-    function handleDevSelect(e: ChangeEvent<HTMLSelectElement>){
+    function handleDevSelect(e: ChangeEvent<HTMLSelectElement>) {
 
         e.stopPropagation();
-        setAddFeatureState((prevState)=>{
-           const devArray = new Array(e.target.selectedOptions.length);
-           for(let i = 0 ; i < e.target.selectedOptions.length ; i++){
-            devArray[i] = e.target.selectedOptions.item(i)?.value
+        setAddFeatureState((prevState) => {
+            const devArray = new Array(e.target.selectedOptions.length);
+            for (let i = 0; i < e.target.selectedOptions.length; i++) {
+                devArray[i] = e.target.selectedOptions.item(i)?.value
 
-           }
-            return({
+            }
+            return ({
                 ...prevState,
-                developersAssigned : devArray
+                developersAssigned: devArray
             });
         });
-        
+
     }
 
-    function handleOnAddUserTypeClick(arg0: { usernameInput: any; userTypeInput: any; }, setUserInput: any) {
-        throw new Error("Function not implemented.");
-    }
 
-    function handleOnRemoveUserTypeClick(arg0: { usernameInput: any; userTypeInput: any; }, setUserInput: any) {
-        throw new Error("Function not implemented.");
-    }
 
     return (
         <>
@@ -281,27 +459,138 @@ function AddFeaturesElement({ projectDevTeam, projectTimeConstraints }: AddFeatu
 
             </Form>
             <Form fieldSetOptions={timeConstraintsFieldSetOptions} cssClassName="time-constraints-add-form" >
-                <Input  onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureStartTime} inputType="datetime-local" labelName="Start time :" name="featureStartTime" cssClassName="project-start-time-input" />
-                <Input  onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
+                <Input onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureStartTime} inputType="datetime-local" labelName="Start time :" name="featureStartTime" cssClassName="project-start-time-input" />
+                <Input onEvent={handleChange} onInput={handleInput} inputState={addFeatureState.featureEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
 
             </Form>
 
             <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions} >
 
-               
-               
-                          
-                <select value={addFeatureState.developersAssigned} onChange={(e)=>handleDevSelect(e)} multiple={true} id="devs">
-                {devOptions}
+
+
+
+                <select value={addFeatureState.developersAssigned} onChange={(e) => handleDevSelect(e)} multiple={true} id="devs">
+                    {devOptions}
                 </select>
-                
+
 
 
 
             </Form>
 
-            <Button onClick={handleSubmitFeature} isDisabled={false} cssClassName="add-feature-button"  > {"Submit feature : "}</Button>
+            <Button onClick={(e) => handleSubmitFeature(e)} isDisabled={false} cssClassName="add-feature-button"  > {"Submit feature : "}</Button>
         </>
     );
+}
+type AddTaskElementProps = {
+
+    features : Feature[]|null,
+
+
+}
+
+function AddTaskElement({features}:AddTaskElementProps){
+    //type: string, description: string, timeconstraints: TimeConstraints, assignedDevelopers: Developer[] | null, taskGoals: Task[] | null, currentTaskStatus: string | null): Task
+    if(features !== null){
+     const [addTaskState, setAddTaskState] = useState({
+        taskDescriptionInput: "",
+        taskTypeInput: "",
+        taskStartTime: "",
+        taskEndTime: "",
+        developersAssigned: [-1],
+        selectedFeatureIndex : -1
+    });
+
+    let featureKeys = getKeysForList(features);
+
+   let featureOptions = features.map((feature, index)=>{
+
+        return <option value={index} key={featureKeys[index]}> {`${feature.title}`}</option>
+    });
+
+    let selectedFeature = (addTaskState.selectedFeatureIndex!== -1) ? features[addTaskState.selectedFeatureIndex] : null;
+    let devOptions : ReactNode = <></>;
+    if(selectedFeature!== null && selectedFeature.assignedDevelopers !== null){
+        const keys = getKeysForList(selectedFeature.assignedDevelopers);
+         devOptions  = selectedFeature.assignedDevelopers.map((developer, index)=>{
+                const devTypeElement = (developer.developerType[0].trim()!== "") ? `(${developer.developerType})` : "";
+            return (<option key={keys[index]} value={index}>{`${developer.username} ${devTypeElement}`}</option>)
+
+        });
+
+    }
+
+    function handleSelectFeature(e: ChangeEvent<HTMLSelectElement>){
+
+        e.stopPropagation();
+
+        setAddTaskState((prevState)=>{
+
+            return ({
+                ...prevState,
+                selectedFeature : parseInt(e.target.value)
+            });
+        })
+
+
+    }
+
+        function handleDevSelect(e: ChangeEvent<HTMLSelectElement>): void {
+            
+            let newDevArray = new Array(e.target.selectedOptions.length);
+
+            for(let i = 0 ; i < newDevArray.length ; i++){
+
+                newDevArray[i] = e.target.selectedOptions.item(i)?.value;
+            }
+
+            setAddTaskState( (prevState)=>{
+
+                    return ({
+
+                            ...prevState,
+                            developersAssigned :newDevArray
+                    })
+
+            }
+
+            )
+        }
+
+    return (<>
+        <select name="selectedFeature" value ={addTaskState.selectedFeatureIndex} onChange={handleSelectFeature}>
+            {featureOptions}
+        </select>
+    <Form cssClassName="add-task-form" fieldSetOptions={addtaskFieldSetOptions}>
+
+        <Input inputType="text" cssClassName="task-title-input" labelName="Title :" name="taskTitleInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskTitleInput}>
+        </Input>
+        <Input inputType="text" cssClassName="task-description-input" labelName="Description :" name="taskDescriptionInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskDescriptionInput}>
+        </Input>
+        <Input inputType="text" cssClassName="task-type-input" labelName="task-type :" name="taskTypeInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskTypeInput}>
+        </Input>
+
+
+    </Form><Form fieldSetOptions={timeConstraintsFieldSetOptions} cssClassName="time-constraints-add-form">
+            <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskStartTime} inputType="datetime-local" labelName="Start time :" name="taskStartTime" cssClassName="project-start-time-input" />
+            <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
+
+        </Form>
+        <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions}>
+
+
+
+
+            <select name="developersAssigned" value={addTaskState.developersAssigned} onChange={(e) => handleDevSelect(e)} multiple={true} id="devs">
+                {devOptions}
+            </select>
+
+
+
+
+        </Form></>)}
+        else{
+            return (<></>);
+        }
 }
 

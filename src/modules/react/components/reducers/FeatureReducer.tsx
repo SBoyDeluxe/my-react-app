@@ -68,6 +68,8 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
     //Checks whether the feature array has been instantiated
     const featuresAreInstantiated = (features !== null);
 
+    let returnArray : Feature[]|null =null;
+
     switch (action.type) {
 
         case "ADD_FEATURE": {
@@ -77,11 +79,11 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                 const newFeatureArray = features.concat(featureToAdd);
 
-                return newFeatureArray;
+                returnArray = newFeatureArray;
             } else {
                 const featureToAdd = new Feature(action.payload.title, action.payload.type, action.payload.description, action.payload.timeconstraints, action.payload.developmentTasks, action.payload.assignedDevelopers);
 
-                return [featureToAdd];
+                returnArray = [featureToAdd];
 
             }
 
@@ -97,14 +99,13 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                     let featureToAssignDevsTo = features[index];
                     featureToAssignDevsTo.assignDevelopers(action.payload.developersToAssign, null);
-                    featureToAssignDevsTo.
                     
                     const arrayOfOtherFeatures = features.filter((feature) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
                         feature.type === action.payload.type));
 
                     const newFeatureArray = (features.length > 1) ? (arrayOfOtherFeatures.concat(featureToAssignDevsTo)) : [featureToAssignDevsTo];
 
-                    return newFeatureArray;
+                    returnArray = newFeatureArray;
                 } else {
 
                     const featureToAssignDevsTo = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
@@ -118,8 +119,11 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                         const newFeatureArray = (features.length > 1) ? (arrayOfOtherFeatures.concat(featureToAssignDevsTo[0])) : [featureToAssignDevsTo[0]];
 
-                        return newFeatureArray;
+                        returnArray = newFeatureArray;
 
+                    }
+                    else{
+                        returnArray = null;
                     }
                 }
 
@@ -128,7 +132,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
             }
             else {
-                return (null);
+                returnArray = null;
             }
         }
             break;
@@ -143,8 +147,8 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                     const featureToComplete = features[index];
                     const completedFeature = featureToComplete.completeFeature();
 
-                    const returnArray = (features.length > 1) ? [features[index] : featureToComplete, ...features] : [completedFeature] ;
-                    return returnArray;
+                    const returnElement = (features.length > 1) ? [features[index] = featureToComplete, ...features] : [completedFeature] ;
+                     returnArray = returnElement;
                 }else{
 
 
@@ -153,7 +157,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                             if(featureToComplete !== undefined){
                                 featureToComplete.completeFeature();
-                                return [...features, [index] : featureToComplete]
+                                returnArray = [ features[index] = featureToComplete, ...features]
 
 
                             }
@@ -173,7 +177,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
         }
         break;
 
-        case "ADD_DEVELOPMENT_TASKS"{
+        case "ADD_DEVELOPMENT_TASKS" : {
 
             if(featuresAreInstantiated){
                     
@@ -185,8 +189,8 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                     featureToAddDevTaskTo.addDevelopmentTasks(action.payload.devTasks);
 
 
-                    const returnArray = (features.length > 1) ? [features[index] : featureToAddDevTaskTo, ...features] : [featureToAddDevTaskTo] ;
-                    return returnArray;
+                    const returnElement = (features.length > 1) ? [features[index] = featureToAddDevTaskTo, ...features] : [featureToAddDevTaskTo] ;
+                    returnArray = returnElement;
                 }else{
 
 
@@ -195,7 +199,8 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                             if(featureToaddDevTasksTo !== undefined){
                                 featureToaddDevTasksTo.addDevelopmentTasks(action.payload.devTasks);
-                                return [...features, [index] : featureToaddDevTasksTo]
+                              returnArray =  features.filter((feature,index)=> !(feature.title === action.payload.title && feature.description === action.payload.description &&
+                            feature.type === action.payload.type)).concat(featureToaddDevTasksTo);
 
 
                             }
@@ -208,7 +213,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
         }
         break;
         
-        default : return features;
+        default : returnArray = features;
         break;
 
 
@@ -218,6 +223,8 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
 
     }
+
+    return returnArray;
 
 
 
