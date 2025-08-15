@@ -1,4 +1,4 @@
-import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent } from "react";
+import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent, Key } from "react";
 import { Developer, User } from "../../User";
 import { firebaseClientContext, ProjectStore, UserStore } from "../store/UserStore";
 import { Project } from "../../project";
@@ -22,7 +22,7 @@ export type ProjectsTabProp = {
 }
 
 export function ProjectsTab() {
-
+     let keysNeededForList : Key[];
     const projectStore = useSyncExternalStore(ProjectStore.subscribe, ProjectStore.getSnapshotProjects);
     let loadingStore = useLoadingStore();
     const appThemeContext = useContext(themeContext);
@@ -46,6 +46,21 @@ export function ProjectsTab() {
 
     }
 
+    if(activeProjects !== null){
+
+       const numberOfActiveProjects = activeProjects.length;
+
+        keysNeededForList = new Array<Key>(numberOfActiveProjects); 
+
+       for(let i = 0 ; i < numberOfActiveProjects ; i++){
+
+        keysNeededForList[i] = window.crypto.randomUUID();
+       }
+
+
+
+    }
+
 
 
     return (<>
@@ -62,21 +77,21 @@ export function ProjectsTab() {
             activeProjects !== null && (
 
                 <>
-                    {activeProjects.map((project) => {
+                    {activeProjects.map((project, index) => {
 
 
                         return (
-                            <Background cssClassName="project-details-container" backgroundColor={appThemeContext.tertiaryContentColor}>
+                            <Background key={keysNeededForList[index]} cssClassName="project-details-container" backgroundColor={appThemeContext.tertiaryContentColor}>
                                 <ProgressBar barColor={appThemeContext.tertiaryContrastColor} progress={(getTimeFraction(project.timeconstraints))} />
-                                <details className="project-details-element" >
-                                    <summary><b>{`${project.title} : ${project.timeconstraints.startdate} -> ${project.timeconstraints.enddate}`} </b></summary>
+                                <details className="project-details-element"  >
+                                    <summary><b>{`${project.title} : ${project.timeconstraints._startdate} -> ${project.timeconstraints._enddate}`} </b></summary>
 
                                     <details>
                                         <summary> {"Features : "} </summary>
 
-                                        <Form >
-
-                                        </Form>
+                                       <AddFeaturesElement projectDevTeam={project.developerTeam} projectTimeConstraints={project.timeconstraints}>
+                                        
+                                       </AddFeaturesElement>
 
 
                                     </details>
