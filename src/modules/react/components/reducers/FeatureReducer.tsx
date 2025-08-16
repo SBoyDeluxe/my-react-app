@@ -94,7 +94,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
             //Only if features are instantiated can we assign developers to those features
             if (featuresAreInstantiated) {
 
-                if (action.payload.featureIndex !== null) {
+                if (action.payload.featureIndex !== undefined) {
                     const index = action.payload.featureIndex;
 
                     let featureToAssignDevsTo = features[index];
@@ -142,7 +142,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                 //If featureIndex is given this is a prioritized for filtering
 
-                if(action.payload.featureIndex){
+                if(action.payload.featureIndex !== undefined){
                     const index = action.payload.featureIndex;
                     const featureToComplete = features[index];
                     const completedFeature = featureToComplete.completeFeature();
@@ -154,10 +154,12 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                       const featureToComplete = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
                             feature.type === action.payload.type))[0];
+                      const restOfTheFeatures = features.filter((feature) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
+                            feature.type === action.payload.type));
 
                             if(featureToComplete !== undefined){
                                 featureToComplete.completeFeature();
-                                returnArray = [ features[index] = featureToComplete, ...features]
+                                returnArray = [ ...restOfTheFeatures, featureToComplete]
 
 
                             }
@@ -183,13 +185,13 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                     
                 //If featureIndex is given this is a prioritized for filtering
 
-                if(action.payload.featureIndex){
+                if(typeof action.payload.featureIndex === "number"){
                     const index = action.payload.featureIndex;
                     const featureToAddDevTaskTo = features[index];
                     featureToAddDevTaskTo.addDevelopmentTasks(action.payload.devTasks);
 
-
-                    const returnElement = (features.length > 1) ? [features[index] = featureToAddDevTaskTo, ...features] : [featureToAddDevTaskTo] ;
+                    
+                    const returnElement = (features.length > 1) ? [ ...features, featureToAddDevTaskTo] : [featureToAddDevTaskTo] ;
                     returnArray = returnElement;
                 }else{
 

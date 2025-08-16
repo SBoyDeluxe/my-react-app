@@ -63,14 +63,15 @@ style? : CSSProperties
 name : string,
 list? : string,
 min? : string | number | undefined,
-max? : string | number | undefined
+max? : string | number | undefined,
+placeHolder? : string
 }
 /**
  * Generates a labeled input field of the type = inputType.
  * 
  * 
  */
-export function Input({min=undefined, max=undefined,inputType, onEvent, cssClassName, labelName, inputState, onInput, name, list}:InputProps){
+export function Input({placeHolder=undefined, min=undefined, max=undefined,inputType, onEvent, cssClassName, labelName, inputState, onInput, name, list}:InputProps){
     let children : React.ReactNode = (<>
     </>);
     if(onEvent && onInput){
@@ -79,7 +80,7 @@ export function Input({min=undefined, max=undefined,inputType, onEvent, cssClass
         
       children =  (<>
                 <label  htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input min={min} max={max} list={list} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
+                        <input placeholder={placeHolder} min={min} max={max} list={list} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}   onChange={(e)=>onEvent(e)}>
 
                         </input>
 
@@ -89,7 +90,7 @@ export function Input({min=undefined, max=undefined,inputType, onEvent, cssClass
     else if(onInput){
           children =  (<>
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input min={min} max={max} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
+                        <input  placeholder={placeHolder}  min={min} max={max} value = {inputState} onInput={(e)=>onInput(e)}  type={inputType} name={name} className={cssClassName}>
 
                         </input>
 
@@ -101,7 +102,7 @@ export function Input({min=undefined, max=undefined,inputType, onEvent, cssClass
 
                    children =  (<>
                 <label htmlFor={name} className={labelName} > <p>{labelName}</p>
-                        <input min={min} max={max} value = {inputState}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
+                        <input  placeholder={placeHolder}  min={min} max={max} value = {inputState}   type={inputType} name={name} className={cssClassName} onChange={(e)=>onEvent(e)}>
 
                         </input>
 

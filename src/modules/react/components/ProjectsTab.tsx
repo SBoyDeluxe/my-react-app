@@ -1,8 +1,8 @@
-import { act, ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, InputEvent, Key, useReducer, Fragment } from "react";
-import { Developer, User } from "../../User";
-import { firebaseClientContext, ProjectStore, UserStore } from "../store/UserStore";
+import { ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, Key, useReducer, FormEvent } from "react";
+import { Developer } from "../../User";
+import { ProjectStore } from "../store/UserStore";
 import { Project } from "../../project";
-import { LoadingStore, useLoadingStore } from "./LoadingStore";
+import { useLoadingStore } from "./LoadingStore";
 import { Background } from "./background";
 import { themeContext } from "../context/ThemeContext";
 import { ProgressBar } from "./ProgressBar";
@@ -11,9 +11,7 @@ import { FieldSetOptions, Form } from "./Form";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { FeatureReducer } from "./reducers/FeatureReducer";
-import { start } from "repl";
 import { Feature } from "../../feature";
-import { features } from "process";
 import { Task } from "../../Task";
 
 
@@ -77,7 +75,7 @@ export function ProjectsTab() {
 
 
         //  }
-        new Task(type, `Plan development of ${title}`, timeconstraints )
+       
         const action = { type: "ADD_FEATURE", payload: { title: title, description: description, type: type, timeconstraints: timeconstraints, developmentTasks: null, assignedDevelopers: developersAssigned } }
         dispatcher(action);
 
@@ -121,14 +119,36 @@ export function ProjectsTab() {
                                         </AddFeaturesElement>
 
                                     </details>
-                                    
+
                                     <details>
                                         <summary> {"Feature overview : "}</summary>
 
-                                        <FeatureOverview features={state}  />
+                                        <FeatureOverview features={state} />
+                                        <details>
+                                            <summary>{"Add task ;"}</summary>
+                                            <AddTaskElement handleAddTask={(type, description, timeconstraints, assignDevelopers, selectedFeatureIndex)=>{
+                                                //Make action object with complete payload and type === "ADD_DEVELOPMENT_TASK"
+                                                const newTask = new Task(type, description, timeconstraints, assignDevelopers, null, "Pending")
+                                                const action = {type : "ADD_DEVELOPMENT_TASKS", 
+                                                                payload : {
+                                                                            featureIndex : selectedFeatureIndex,
+                                                                            timeconstraints:timeconstraints,
+                                                                            devTasks : [newTask]
 
-                                        
+
+
+                                                                                                    }
+                                            };
+
+                                            dispatcher(action);
+
+                                            
+
+                                            }} features={state}></AddTaskElement>
+                                        </details>
+
                                     </details>
+
 
                                 </details>
 
@@ -175,6 +195,7 @@ function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
         return <></>
     }
     else {
+        const keysForFeatures = getKeysForList(features);
         return features.map((feature, index) => {
             // const activeTasks = feature.getActiveDevelopmentTasks();
             // const pendingTasks = feature.getPendingDevelopmentTasks();
@@ -201,12 +222,11 @@ function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
             }
 
 
-
             return (
 
-                <Background cssClassName="feature-overview">
+                <Background key={keysForFeatures[index]} cssClassName="feature-overview">
                     <h3> {`${feature.title} ${feature.type ? `(${feature.type})` : ""}`} </h3>
-                    <textarea defaultValue={feature.description}/>
+                    <textarea defaultValue={feature.description} />
 
 
                     <details>
@@ -484,113 +504,194 @@ function AddFeaturesElement({ onSubmitFeature, projectDevTeam, projectTimeConstr
 }
 type AddTaskElementProps = {
 
-    features : Feature[]|null,
+    features: Feature[] | null,
+
+    handleAddTask: (type: string, description: string, timeconstraints: TimeConstraints, assignedDevelopers: Developer[] | null, selectedFeatureIndex : number) => void
 
 
 }
 
-function AddTaskElement({features}:AddTaskElementProps){
+function AddTaskElement({ handleAddTask,features }: AddTaskElementProps) {
     //type: string, description: string, timeconstraints: TimeConstraints, assignedDevelopers: Developer[] | null, taskGoals: Task[] | null, currentTaskStatus: string | null): Task
-    if(features !== null){
-     const [addTaskState, setAddTaskState] = useState({
-        taskDescriptionInput: "",
-        taskTypeInput: "",
-        taskStartTime: "",
-        taskEndTime: "",
-        developersAssigned: [-1],
-        selectedFeatureIndex : -1
-    });
-
-    let featureKeys = getKeysForList(features);
-
-   let featureOptions = features.map((feature, index)=>{
-
-        return <option value={index} key={featureKeys[index]}> {`${feature.title}`}</option>
-    });
-
-    let selectedFeature = (addTaskState.selectedFeatureIndex!== -1) ? features[addTaskState.selectedFeatureIndex] : null;
-    let devOptions : ReactNode = <></>;
-    if(selectedFeature!== null && selectedFeature.assignedDevelopers !== null){
-        const keys = getKeysForList(selectedFeature.assignedDevelopers);
-         devOptions  = selectedFeature.assignedDevelopers.map((developer, index)=>{
-                const devTypeElement = (developer.developerType[0].trim()!== "") ? `(${developer.developerType})` : "";
-            return (<option key={keys[index]} value={index}>{`${developer.username} ${devTypeElement}`}</option>)
-
+    if (features !== null) {
+        const [addTaskState, setAddTaskState] = useState({
+            taskDescriptionInput: "",
+            taskTypeInput: "",
+            taskStartTime: "",
+            taskEndTime: "",
+            developersAssigned: [0],
+            selectedFeatureIndex: 0
         });
 
-    }
+        const timeConstraintLegendText: ReactNode = (<><b><p>{"Set time-constraints : "}</p></b></>);
+        const timeConstraintsFieldSetOptions: FieldSetOptions = {
+            children: timeConstraintLegendText
+        };
+        const devAssignLegendText: ReactNode = (<><b><p>{"Assign Developers to task: "}</p></b></>);
+        const devAssignFieldSetOptions: FieldSetOptions = {
+            children: devAssignLegendText
+        };
 
-    function handleSelectFeature(e: ChangeEvent<HTMLSelectElement>){
+        let featureKeys = getKeysForList(features);
 
-        e.stopPropagation();
+        let featureOptions = features.map((feature, index) => {
 
-        setAddTaskState((prevState)=>{
+            return <option value={index} key={featureKeys[index]}> {`${feature.title}`}</option>
+        });
 
-            return ({
-                ...prevState,
-                selectedFeature : parseInt(e.target.value)
+        let selectedFeature = (addTaskState.selectedFeatureIndex !== -1) ? features[addTaskState.selectedFeatureIndex] : null;
+        let devOptions: ReactNode = (<></>);
+        if (selectedFeature !== null && selectedFeature.assignedDevelopers !== null) {
+            const keys = getKeysForList(selectedFeature.assignedDevelopers);
+            devOptions = selectedFeature.assignedDevelopers.map((developer, index) => {
+                const devTypeElement = (developer.developerType[0].trim() !== "") ? `(${developer.developerType})` : "";
+                return (<option key={keys[index]} value={index}>{`${developer.username} ${devTypeElement}`}</option>)
+
             });
-        })
+
+        }
+
+        function handleSelectFeature(e: ChangeEvent<HTMLSelectElement>) {
+
+            e.stopPropagation();
+
+            setAddTaskState((prevState) => {
+
+                return ({
+                    ...prevState,
+                    selectedFeatureIndex: parseInt(e.target.value)
+                });
+            })
 
 
-    }
+        }
 
         function handleDevSelect(e: ChangeEvent<HTMLSelectElement>): void {
-            
+
             let newDevArray = new Array(e.target.selectedOptions.length);
 
-            for(let i = 0 ; i < newDevArray.length ; i++){
+            for (let i = 0; i < newDevArray.length; i++) {
 
                 newDevArray[i] = e.target.selectedOptions.item(i)?.value;
             }
 
-            setAddTaskState( (prevState)=>{
+            setAddTaskState((prevState) => {
 
-                    return ({
+                return ({
 
-                            ...prevState,
-                            developersAssigned :newDevArray
-                    })
+                    ...prevState,
+                    developersAssigned: newDevArray
+                });
 
             }
 
-            )
+            );
         }
 
-    return (<>
-        <select name="selectedFeature" value ={addTaskState.selectedFeatureIndex} onChange={handleSelectFeature}>
-            {featureOptions}
-        </select>
-    <Form cssClassName="add-task-form" fieldSetOptions={addtaskFieldSetOptions}>
+        function handleClick(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 
-        <Input inputType="text" cssClassName="task-title-input" labelName="Title :" name="taskTitleInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskTitleInput}>
-        </Input>
-        <Input inputType="text" cssClassName="task-description-input" labelName="Description :" name="taskDescriptionInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskDescriptionInput}>
-        </Input>
-        <Input inputType="text" cssClassName="task-type-input" labelName="task-type :" name="taskTypeInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskTypeInput}>
-        </Input>
+            e.preventDefault();
+            e.stopPropagation();
 
+            //Since button is not disabled <=> All variables exist
+             const startDate = new Date(addTaskState.taskStartTime);
+            const endDate = new Date(addTaskState.taskEndTime);
+            const todaysDate = new Date(Date.now());
 
-    </Form><Form fieldSetOptions={timeConstraintsFieldSetOptions} cssClassName="time-constraints-add-form">
-            <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskStartTime} inputType="datetime-local" labelName="Start time :" name="taskStartTime" cssClassName="project-start-time-input" />
-            <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskEndTime} inputType="datetime-local" labelName="End time :" name="featureEndTime" cssClassName="project-end-time-input" />
+            const datesAreValid = ((endDate.getTime() >= startDate.getTime()) && (endDate.getTime() >= todaysDate.getTime()));
 
-        </Form>
-        <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions}>
+            if(datesAreValid){
+            // We can get the indices of the developers assigned to the task in the state object and
+            //  <features.assignedDevelopers>-property and match these values to get the wanted devs for the task
 
+            //get selected feature 
+           const selectedFeatureIndex = addTaskState.selectedFeatureIndex;
+            const taskDevs = addTaskState.developersAssigned.map((devIndex) => features![selectedFeatureIndex].assignedDevelopers![devIndex]);
 
+            const timeconstraints = new TimeConstraints(startDate, endDate);
 
-
-            <select name="developersAssigned" value={addTaskState.developersAssigned} onChange={(e) => handleDevSelect(e)} multiple={true} id="devs">
-                {devOptions}
-            </select>
+            handleAddTask(addTaskState.taskTypeInput, addTaskState.taskDescriptionInput, timeconstraints, taskDevs, selectedFeatureIndex)
 
 
 
-
-        </Form></>)}
+        }
         else{
-            return (<></>);
+
+            alert("All dates were not valid, please observe that your planned task can´t start before today, your end time for the task can not be a past date and your start date must come before your end date");
         }
+        }
+
+        function handleChange(e: ChangeEvent<HTMLInputElement>): void {
+            e.stopPropagation();
+
+            setAddTaskState((prevState)=>{
+
+                
+                return(  {
+                        ...prevState,
+                        [e.target.name] : e.target.value
+                    });
+                
+            });
+
+        }
+
+        function handleInput(e: FormEvent<HTMLInputElement>): void {
+
+             setAddTaskState((prevState)=>{
+
+                
+                return(  {
+                        ...prevState,
+                        [e.target.name] : e.target.value
+                    });
+                
+            });
+
+            e.stopPropagation();
+        }
+        let allVariablesExist = (addTaskState.taskTypeInput.trim() !== "") && (addTaskState.taskDescriptionInput.trim() !== "") && (addTaskState.taskStartTime !== "") && (addTaskState.taskEndTime !== "");
+
+        return (<>
+            <select name="selectedFeature" value={addTaskState.selectedFeatureIndex} onChange={handleSelectFeature}>
+                {featureOptions}
+            </select>
+            
+            <Form cssClassName="add-task-form" >
+
+                
+
+                <Input inputType="text" cssClassName="task-description-input" labelName="Description :" name="taskDescriptionInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskDescriptionInput}>
+                </Input>
+                <Input inputType="text" cssClassName="task-type-input" labelName="Task-type :" name="taskTypeInput" onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskTypeInput}>
+                </Input>
+
+
+            </Form>
+            <Form cssClassName="time-constraints-add-form" fieldSetOptions={timeConstraintsFieldSetOptions}>
+                <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskStartTime} inputType="datetime-local" labelName="Start time :" name="taskStartTime" cssClassName="task-start-time-input" />
+                <Input onEvent={handleChange} onInput={handleInput} inputState={addTaskState.taskEndTime} inputType="datetime-local" labelName="End time :" name="taskEndTime" cssClassName="task-end-time-input" />
+
+            </Form>
+            <Form cssClassName="developer-assignment-form" fieldSetOptions={devAssignFieldSetOptions} >
+
+
+
+
+                <select name="developersAssigned" value={addTaskState.developersAssigned} onChange={(e) => handleDevSelect(e)} multiple={true} id="devs">
+                    {devOptions}
+                </select>
+
+
+
+
+            </Form>
+
+            <Button cssClassName="add-task-button" isDisabled={!allVariablesExist} onClick={handleClick}>{"Add task"}</Button>
+        </>)
+    }
+    else {
+        return (<></>);
+    }
 }
 

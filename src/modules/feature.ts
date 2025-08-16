@@ -49,7 +49,15 @@ export class Feature{
      * @param tasksToAdd 
      */
     public addDevelopmentTasks(tasksToAdd:Task[]){
-        this.developmentTasks = this.developmentTasks.concat(tasksToAdd);
+
+    if((this.developmentTasks === undefined) ||(this.developmentTasks=== null)){
+
+        this.developmentTasks = tasksToAdd;
+
+    }
+    else{
+        this.developmentTasks.concat(tasksToAdd);
+    }
 
     }
     /**Removes the development task from the feature development plan
