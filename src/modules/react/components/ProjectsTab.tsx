@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, Key, useReducer, FormEvent } from "react";
+import { ReactNode, useContext, useEffect, useState, useSyncExternalStore, ChangeEvent, Key, useReducer, FormEvent, Fragment } from "react";
 import { Developer } from "../../User";
 import { ProjectStore } from "../store/UserStore";
 import { Project } from "../../project";
@@ -13,6 +13,7 @@ import { Button } from "./Button";
 import { FeatureReducer } from "./reducers/FeatureReducer";
 import { Feature } from "../../feature";
 import { Task } from "../../Task";
+import { get } from "node:http";
 
 
 
@@ -123,7 +124,7 @@ export function ProjectsTab() {
                                     <details>
                                         <summary> {"Feature overview : "}</summary>
 
-                                        <FeatureOverview features={state} />
+                                        <FeatureOverview handleStatusChange={dispatcher} features={state} />
                                         <details>
                                             <summary>{"Add task ;"}</summary>
                                             <AddTaskElement handleAddTask={(type, description, timeconstraints, assignDevelopers, selectedFeatureIndex)=>{
@@ -133,7 +134,7 @@ export function ProjectsTab() {
                                                                 payload : {
                                                                             featureIndex : selectedFeatureIndex,
                                                                             timeconstraints:timeconstraints,
-                                                                            devTasks : [newTask]
+                                                                            devTask : newTask
 
 
 
@@ -185,31 +186,44 @@ type AddFeaturesElementProps = {
 
 type FeatureOverviewProps = {
 
-    features: Feature[] | null
+    features: Feature[] | null,
+
+    handleStatusChange : ((action : any)=>void),
+
 }
 
-function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
+function FeatureOverview({handleStatusChange ,features }: FeatureOverviewProps): ReactNode {
+       
+
 
     if (features === null) {
 
         return <></>
     }
     else {
+        let tableRows:ReactNode[] = [];
+         let assignedDevList: ReactNode = (<></>);
+        const appThemeContext = useContext(themeContext);
+         
         const keysForFeatures = getKeysForList(features);
         return features.map((feature, index) => {
-            // const activeTasks = feature.getActiveDevelopmentTasks();
-            // const pendingTasks = feature.getPendingDevelopmentTasks();
-            // const numberOfPendingTasks = pendingTasks.length;
-            // const numberOfActiveTasks = activeTasks.length;
-            // const numberOfCompletedTasks = feature.developmentTasks.length - (numberOfActiveTasks + numberOfPendingTasks);
+
+            if( feature.developmentTasks !== null){   
+            const activeTasks = feature.getActiveDevelopmentTasks();
+            const pendingTasks = feature.getPendingDevelopmentTasks();
+            const completedTasks = feature.developmentTasks!.filter((devTask)=> (devTask.currentTaskStatus === "Completed"));
+            const numberOfPendingTasks = pendingTasks.length;
+            const numberOfActiveTasks = activeTasks.length;
+            const numberOfCompletedTasks = completedTasks.length;
 
 
-            // const progress = feature.getProgress();
-            //We need to generate a number of rows accomodating the largest of the active, pending or complete tasks : this array is sorted from largest to smallest
-            // let amountOfDifferentTasks = [numberOfActiveTasks, numberOfCompletedTasks, numberOfPendingTasks].sort((numberA, numberB) => {
-            //     return numberB - numberA;
-            // });
-            let assignedDevList: ReactNode = (<></>);
+            const progress = feature.getProgress();
+           // We need to generate a number of rows accomodating the largest of the active, pending or complete tasks : this array is sorted from largest to smallest
+           // <=> We need as many rows as the first element of the array
+            let amountOfDifferentTasks = [numberOfActiveTasks, numberOfCompletedTasks, numberOfPendingTasks].sort((numberA, numberB) => {
+                return numberB - numberA;
+            });
+           
             let assignedFeatureDevelopers = feature.assignedDevelopers;
             if (assignedFeatureDevelopers !== null) {
                 const keys = getKeysForList(assignedFeatureDevelopers);
@@ -220,11 +234,161 @@ function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
                     );
                 });
             }
+            //We will need one key for each row, since this is a mapping call
+            const keysForTableRows = getKeysForList( new Array(amountOfDifferentTasks[0]));
+            //We will also need one key per  task and type of task
 
+            const activeTaskKeys = getKeysForList(activeTasks);
+            const pendingTaskKeys = getKeysForList(pendingTasks);
+            const completedTaskKeys = getKeysForList(new Array(numberOfCompletedTasks));
+                //amountOfDifferentTasks[0] === amount of rows we need
+                //We go down each row and try to add the completed, active and pending tasks in the order:
+                //Pending (0)-> Active (1) -> Completed (2)
+
+                let mappedTasks : ReactNode[][] = new Array(amountOfDifferentTasks[0]).fill(new Array(3));
+                for(let i = 0 ; i < amountOfDifferentTasks[0] ; i++){
+                        
+                        for(let k = 0 ; k < 3 ; k++){
+
+                                switch (k) {
+                                    case 0:{
+                                                                //We only try taskKeys after the check that i < ... .length <=> We can just check for i
+                                        mappedTasks[i][k] = (i < pendingTasks.length) ? (<div style={{border : `medium inset ${appThemeContext.primaryBackgroundColor} `}} key={pendingTaskKeys[i]}><h5>{`${pendingTasks[i].timeconstraints.startdate} -> ${pendingTasks[i].timeconstraints.enddate}`}</h5>
+                                                                                                <h5>{`${pendingTasks[i].type}`}</h5>
+
+                                                                                                <textarea disabled = {false} defaultValue={pendingTasks[i].description}>
+                                                                                                    
+                                                                                                    </textarea>         
+                                                                                                    <Button isDisabled={false} onClick={(e)=>{ e.preventDefault(); e.stopPropagation();
+                                                                                                            //make action object
+                                                                                                            
+                                                                                                            const devTaskIndex = feature.developmentTasks?.findIndex((task)=> ((task.type === pendingTasks[i].type) && (task.description === pendingTasks[i].description)
+                                                                                                             && (task.assignedDevelopers === pendingTasks[i].assignedDevelopers)));
+                                                                                                            const action = {
+                                                                                                                type :  "CHANGE_DEV_TASK_STATUS",
+                                                                                                                payload : {
+                                                                                                                        devTaskIndex:devTaskIndex,
+                                                                                                                        featureIndex:index,
+                                                                                                                        newStatus:"Active"
+                                                                                                                }
+                                                                                                                
+                                                                                                                    };
+                                                                                                                    
+                                                                                                                    handleStatusChange(action);
+                                                                                                            
+
+                                                                                                    }} cssClassName="task-to-active-task-button">{"Set task as active: "}</Button>
+                                                                                                                                                                                                </div>) 
+                                                                                    :       (<></>) ;
+                                                                                                                                                                                                
+                                    }
+                                        
+                                        break;
+                                    case 1: {
+                                                                //We only try taskKeys after the check that i < ... .length <=> We can just check for i
+                                        mappedTasks[i][k] = (i < activeTasks.length) ? (<div style={{}} key={activeTaskKeys[i]}><h5>{`${activeTasks[i].timeconstraints.startdate} -> ${activeTasks[i].timeconstraints.enddate}`}</h5>
+                                                                                                <h5>{`${activeTasks[i].type}`}</h5>
+
+                                                                                                <textarea disabled = {false} defaultValue={activeTasks[i].description}>
+                                                                                                    
+                                                                                                    </textarea>
+                                                                                                                       <Button isDisabled={false} onClick={(e)=>{ e.preventDefault(); e.stopPropagation();
+                                                                                                            //make action object
+                                                                                                            
+                                                                                                            const devTaskIndex = feature.developmentTasks?.findIndex((task)=> ((task.type === activeTasks[i].type) && (task.description === activeTasks[i].description)
+                                                                                                             && (task.assignedDevelopers === activeTasks[i].assignedDevelopers)));
+                                                                                                             FeatureReducer
+                                                                                                            const action = {
+                                                                                                                
+                                                                                                                type :  "CHANGE_DEV_TASK_STATUS",
+                                                                                                                payload : {
+                                                                                                                        devTaskIndex:devTaskIndex,
+                                                                                                                        featureIndex:index,
+                                                                                                                        newStatus:"Complete"
+                                                                                                                }
+                                                                                                                
+                                                                                                                    };
+
+                                                                                                                    activeTasks[i].completeTask();
+                                                                                                                    
+                                                                                                                    handleStatusChange(action);
+                                                                                                            
+
+                                                                                                    }} cssClassName="task-to-complete-task-button">{"Set task as complete : "}</Button>   
+                                                                                                      <Button isDisabled={false} onClick={(e)=>{ e.preventDefault(); e.stopPropagation();
+                                                                                                            //make action object
+                                                                                                            
+                                                                                                            const devTaskIndex = feature.developmentTasks?.findIndex((task)=> ((task.type === activeTasks[i].type) && (task.description === activeTasks[i].description)
+                                                                                                             && (task.assignedDevelopers === activeTasks[i].assignedDevelopers)));
+                                                                                                            const action = {
+                                                                                                                type :  "CHANGE_DEV_TASK_STATUS",
+                                                                                                                payload : {
+                                                                                                                        devTaskIndex:devTaskIndex,
+                                                                                                                        featureIndex:index,
+                                                                                                                        newStatus:"Pending"
+                                                                                                                }
+                                                                                                                
+                                                                                                                    };
+                                                                                                                    
+                                                                                                                    handleStatusChange(action);
+                                                                                                            
+
+                                                                                                    }} cssClassName="task-to-pending-task-button">{"Set task as pending : "}</Button>                                                                              </div>) 
+                                                                                    :       (<></>) ;
+                                                                                                                                                                                                
+                                    }
+                                        
+                                        break;
+                                    case 2:{
+                                                                //We only try taskKeys after the check that i < ... .length <=> We can just check for i
+                                        mappedTasks[i][k] = (i < completedTasks.length) ? (<div style={{}} key={completedTaskKeys[i]}><h5>{`${completedTasks[i].timeconstraints.startdate} -> ${completedTasks[i].timeconstraints.enddate} \n \t Completed at : ${completedTasks[i].timeconstraints.completiondate}`}</h5>
+                                                                                                <h5>{`${completedTasks[i].type}`}</h5>
+
+                                                                                                <textarea defaultValue ={completedTasks[i].description} disabled = {false}>
+                                                                                                    
+                                                                                                    </textarea>
+                                                                                                                                                                                                </div>) 
+                                                                                    :       (<></>) ;
+                                                                                                                                                                                                
+                                    }
+                                        
+                                        break;
+                                
+                                    default:
+                                        break;
+                                }
+
+                                //Once we have exited the switch-statement we have mapped all our tasks for one row
+
+                        }
+                     
+
+
+
+
+
+                }
+                                        //Once we finish the for loop we have mapped all rows of elements, we can safely put each element into any table row since they´re, at worst, are empty
+                        tableRows = new Array(amountOfDifferentTasks[0]);
+                        for(let i = 0 ; i < amountOfDifferentTasks[0] ; i ++){
+
+                                tableRows[i] = (<Fragment key={keysForTableRows[i]}>
+                                                        <tr>
+                                                            <td>{mappedTasks[i][0]}</td>
+                                                            <td>{mappedTasks[i][1]}</td>
+                                                            <td>{mappedTasks[i][2]}</td>
+                                                        </tr>
+
+                                                </Fragment>)
+                        }
+
+            }
+
+            
 
             return (
 
-                <Background key={keysForFeatures[index]} cssClassName="feature-overview">
+                <Background key={keysForFeatures[index]} cssClassName="feature-overview" >
                     <h3> {`${feature.title} ${feature.type ? `(${feature.type})` : ""}`} </h3>
                     <textarea defaultValue={feature.description} />
 
@@ -241,8 +405,7 @@ function FeatureOverview({ features }: FeatureOverviewProps): ReactNode {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                </tr>
+                                {tableRows}
                             </tbody>
                         </table>
                     </details>

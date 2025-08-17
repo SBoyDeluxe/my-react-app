@@ -24,7 +24,7 @@ export class Feature{
     /**The tasks the developers assigned to the feature need to complete
      * to accomplish the feature
      */
-    developmentTasks:Task[];
+    developmentTasks:Task[]|undefined;
     /**A description of the feature (feature specification)
      * 
      */
@@ -56,7 +56,9 @@ export class Feature{
 
     }
     else{
-        this.developmentTasks.concat(tasksToAdd);
+        const concatedArray  = this.developmentTasks.concat(tasksToAdd);
+        this.developmentTasks = concatedArray;
+        console.log(this.developmentTasks);
     }
 
     }
@@ -148,7 +150,7 @@ export class Feature{
      */
     getActiveDevelopmentTasks():Task[]{
 
-        let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus==Task.taskStatus.active);
+        let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus==="Active");
          
         return returnArray;
 
@@ -156,7 +158,7 @@ export class Feature{
 
     getPendingDevelopmentTasks():Task[]{
 
-        let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus==Task.taskStatus.pending);
+        let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus=== "Pending");
          
         return returnArray;
 

@@ -1,5 +1,6 @@
 import { useReducer } from "react";
 import { Feature } from "../../../feature";
+import { Task } from "../../../Task";
 
 
 
@@ -55,10 +56,22 @@ function useFeatureReducer() {
  *      action.payload.title : string,
  *      action.payload.type : string,
  *      action.payload.description : string,
- *      action.payload.devTasks : Task[];
+ *      action.payload.devTask : Task;
  *      
  *      action.payload.featureIndex : number | null
  *              
+ *      }
+ * 
+ *  action.type : "CHANGE_DEV_TASK_STATUS": {
+ *
+ *           
+ *               
+ *               
+ *               action.payload.devTaskIndex : number;
+ *
+ *               action.payload.featureIndex : number;
+ *
+ *               action.payload.newStatus :string ;
  *      }
  * 
  * @param features 
@@ -68,7 +81,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
     //Checks whether the feature array has been instantiated
     const featuresAreInstantiated = (features !== null);
 
-    let returnArray : Feature[]|null =null;
+    let returnArray: Feature[] | null = null;
 
     switch (action.type) {
 
@@ -99,7 +112,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                     let featureToAssignDevsTo = features[index];
                     featureToAssignDevsTo.assignDevelopers(action.payload.developersToAssign, null);
-                    
+
                     const arrayOfOtherFeatures = features.filter((feature) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
                         feature.type === action.payload.type));
 
@@ -122,7 +135,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                         returnArray = newFeatureArray;
 
                     }
-                    else{
+                    else {
                         returnArray = null;
                     }
                 }
@@ -136,76 +149,84 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
             }
         }
             break;
-        case "COMPLETE_FEATURE" :   {
+        case "COMPLETE_FEATURE": {
             //We can only complete any features if they have been instantiated
-            if(featuresAreInstantiated){
+            if (featuresAreInstantiated) {
 
                 //If featureIndex is given this is a prioritized for filtering
 
-                if(action.payload.featureIndex !== undefined){
+                if (action.payload.featureIndex !== undefined) {
                     const index = action.payload.featureIndex;
                     const featureToComplete = features[index];
                     const completedFeature = featureToComplete.completeFeature();
 
-                    const returnElement = (features.length > 1) ? [features[index] = featureToComplete, ...features] : [completedFeature] ;
-                     returnArray = returnElement;
-                }else{
+                    const returnElement = (features.length > 1) ? [features[index] = featureToComplete, ...features] : [completedFeature];
+                    returnArray = returnElement;
+                } else {
 
 
-                      const featureToComplete = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
-                            feature.type === action.payload.type))[0];
-                      const restOfTheFeatures = features.filter((feature) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
-                            feature.type === action.payload.type));
+                    const featureToComplete = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
+                        feature.type === action.payload.type))[0];
+                    const restOfTheFeatures = features.filter((feature) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
+                        feature.type === action.payload.type));
 
-                            if(featureToComplete !== undefined){
-                                featureToComplete.completeFeature();
-                                returnArray = [ ...restOfTheFeatures, featureToComplete]
+                    if (featureToComplete !== undefined) {
+                        featureToComplete.completeFeature();
+                        returnArray = [...restOfTheFeatures, featureToComplete]
 
 
-                            }
+                    }
 
 
                 }
 
-                
 
-                
+
+
 
 
             }
-          
 
-        
+
+
         }
-        break;
+            break;
 
-        case "ADD_DEVELOPMENT_TASKS" : {
+        case "ADD_DEVELOPMENT_TASKS": {
 
-            if(featuresAreInstantiated){
-                    
+            if (featuresAreInstantiated) {
+
                 //If featureIndex is given this is a prioritized for filtering
 
-                if(typeof action.payload.featureIndex === "number"){
+                if (typeof action.payload.featureIndex === "number") {
                     const index = action.payload.featureIndex;
-                    const featureToAddDevTaskTo = features[index];
-                    featureToAddDevTaskTo.addDevelopmentTasks(action.payload.devTasks);
+                    let featureToAddDevTaskTo = features[index];
+                    const devTaskToAdd = action.payload.devTask;
+                    let currentDevTasks = featureToAddDevTaskTo.developmentTasks;
+                    //Add our new devTask to the array
+                    const newDevTaskArray = (typeof currentDevTasks?.length !== "undefined") ? currentDevTasks.concat(devTaskToAdd): [devTaskToAdd];
+                    //Add the new task array to our feature object
 
-                    
-                    const returnElement = (features.length > 1) ? [ ...features, featureToAddDevTaskTo] : [featureToAddDevTaskTo] ;
-                    returnArray = returnElement;
-                }else{
+                    featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
+
+                    returnArray = features.filter((feature, arrayIndex) => (arrayIndex !== index)).concat(featureToAddDevTaskTo);
+                } else {
 
 
-                      const featureToaddDevTasksTo = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
-                            feature.type === action.payload.type))[0];
+                    let featureToaddDevTasksTo = features.filter((feature) => (feature.title === action.payload.title && feature.description === action.payload.description &&
+                        feature.type === action.payload.type))[0];
 
-                            if(featureToaddDevTasksTo !== undefined){
-                                featureToaddDevTasksTo.addDevelopmentTasks(action.payload.devTasks);
-                              returnArray =  features.filter((feature,index)=> !(feature.title === action.payload.title && feature.description === action.payload.description &&
+                    if (typeof featureToaddDevTasksTo !== "undefined") {
+                        const devTaskToAdd = action.payload.devTask;
+                        let currentDevTasks = featureToaddDevTasksTo.developmentTasks;
+                        //Add our new devTask to the array
+                        const newDevTaskArray = (typeof currentDevTasks !== "undefined") ? currentDevTasks.concat(devTaskToAdd): [devTaskToAdd];
+                        featureToaddDevTasksTo.developmentTasks = newDevTaskArray;
+                        returnArray = features.filter((feature, index) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
                             feature.type === action.payload.type)).concat(featureToaddDevTasksTo);
 
 
-                            }
+                    }
 
 
                 }
@@ -213,10 +234,41 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
             }
 
         }
+            break;
+
+        case "CHANGE_DEV_TASK_STATUS": {
+
+            if (featuresAreInstantiated) {
+                //Obtain index of feature and devTask from payload
+
+                const devTaskIndex = action.payload.devTaskIndex;
+
+                const featureIndex = action.payload.featureIndex;
+
+                const newStatus = action.payload.newStatus;
+
+                if (newStatus === "Complete") {
+                    let featureToCompleteTaskIn = features.filter((feat, featIndex)=>(featIndex === featureIndex))[0];
+                    
+                    featureToCompleteTaskIn.developmentTasks![devTaskIndex].completeTask();
+
+                    returnArray = features.filter((feat, featindex)=>(featindex !== featureIndex)).concat(featureToCompleteTaskIn);
+                }
+                else {
+
+                    let featureToSetStatusForTaskIn = features.filter((feat, featIndex)=>(featIndex === featureIndex))[0];
+                    
+                    featureToSetStatusForTaskIn.developmentTasks![devTaskIndex].currentTaskStatus = newStatus;
+
+                    returnArray = features.filter((feat, featindex)=>(featindex !== featureIndex)).concat(featureToSetStatusForTaskIn);                }
+               
+            }
+
+        }
         break;
-        
-        default : returnArray = features;
-        break;
+
+        default: returnArray = features;
+            break;
 
 
 
