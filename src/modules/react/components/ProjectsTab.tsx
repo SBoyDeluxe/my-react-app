@@ -286,7 +286,7 @@ function FeatureOverview({handleStatusChange ,features }: FeatureOverviewProps):
                                         break;
                                     case 1: {
                                                                 //We only try taskKeys after the check that i < ... .length <=> We can just check for i
-                                        mappedTasks[i][k] = (i < activeTasks.length) ? (<div style={{}} key={activeTaskKeys[i]}><h5>{`${activeTasks[i].timeconstraints.startdate} -> ${activeTasks[i].timeconstraints.enddate}`}</h5>
+                                        mappedTasks[i][k] = (i < activeTasks.length) ? (<div style={{border : `medium inset ${appThemeContext.primaryBackgroundColor} `}} key={activeTaskKeys[i]}><h5>{`${activeTasks[i].timeconstraints.startdate} -> ${activeTasks[i].timeconstraints.enddate}`}</h5>
                                                                                                 <h5>{`${activeTasks[i].type}`}</h5>
 
                                                                                                 <textarea disabled = {false} defaultValue={activeTasks[i].description}>
@@ -341,7 +341,7 @@ function FeatureOverview({handleStatusChange ,features }: FeatureOverviewProps):
                                         break;
                                     case 2:{
                                                                 //We only try taskKeys after the check that i < ... .length <=> We can just check for i
-                                        mappedTasks[i][k] = (i < completedTasks.length) ? (<div style={{}} key={completedTaskKeys[i]}><h5>{`${completedTasks[i].timeconstraints.startdate} -> ${completedTasks[i].timeconstraints.enddate} \n \t Completed at : ${completedTasks[i].timeconstraints.completiondate}`}</h5>
+                                        mappedTasks[i][k] = (i < completedTasks.length) ? (<div style={{border : `medium inset ${appThemeContext.primaryBackgroundColor} `}} key={completedTaskKeys[i]}><h5>{`${completedTasks[i].timeconstraints.startdate} -> ${completedTasks[i].timeconstraints.enddate} \n \t Completed at : ${completedTasks[i].timeconstraints.completiondate}`}</h5>
                                                                                                 <h5>{`${completedTasks[i].type}`}</h5>
 
                                                                                                 <textarea defaultValue ={completedTasks[i].description} disabled = {false}>
@@ -363,7 +363,7 @@ function FeatureOverview({handleStatusChange ,features }: FeatureOverviewProps):
                         }
                      
 
-
+                                                                                //-----!!PUT DEVELOPERS IN EACH TASK !!--------
 
 
 
