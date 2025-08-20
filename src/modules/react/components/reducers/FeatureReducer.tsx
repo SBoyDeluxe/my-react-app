@@ -158,10 +158,9 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                 if (action.payload.featureIndex !== undefined) {
                     const index = action.payload.featureIndex;
                     const featureToComplete = features[index];
-                    featureToComplete.completeFeature();
+                    const completedFeature = featureToComplete.completeFeature();
 
-
-                    const returnElement = (features.length > 1) ? features.filter((val, valIndex) => (valIndex !== index)).concat(featureToComplete) : [featureToComplete];
+                    const returnElement = (features.length > 1) ? [features[index] = featureToComplete, ...features] : [completedFeature];
                     returnArray = returnElement;
                 } else {
 
@@ -200,59 +199,17 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                 //If featureIndex is given this is a prioritized for filtering
 
                 if (typeof action.payload.featureIndex === "number") {
-                    //If features.length === 1 we won´t be able to run filter
-                    const isOnlyOneFeature = (features.length === 1);
                     const index = action.payload.featureIndex;
-
                     let featureToAddDevTaskTo = features[index];
-
-                    const devTasksUndefined = (typeof featureToAddDevTaskTo.developmentTasks === "undefined");
                     const devTaskToAdd = action.payload.devTask;
+                    let currentDevTasks = featureToAddDevTaskTo.developmentTasks;
+                    //Add our new devTask to the array
+                    const newDevTaskArray = (typeof currentDevTasks?.length !== "undefined") ? currentDevTasks.concat(devTaskToAdd): [devTaskToAdd];
+                    //Add the new task array to our feature object
 
+                    featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
 
-                    if (isOnlyOneFeature) {
-
-                        let newDevTaskArray: Task[];
-
-                        if (devTasksUndefined) {
-                            newDevTaskArray = [devTaskToAdd];
-                            featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
-
-                            returnArray = [featureToAddDevTaskTo];
-                        } else {
-                            const currentDevTasks = featureToAddDevTaskTo.developmentTasks;
-
-                            newDevTaskArray = [...currentDevTasks, devTaskToAdd];
-
-                            featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
-
-                            returnArray = [featureToAddDevTaskTo];
-                        }
-
-                    } else {
-                                                let newDevTaskArray: Task[];
-
-
-                        //Multiple features to return in the array
-                        const otherFeatures = features.filter((val, fIndex)=>(fIndex !== index));
-
-                         if (devTasksUndefined) {
-                            newDevTaskArray = [devTaskToAdd];
-                            featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
-                            
-                            returnArray = [...otherFeatures, featureToAddDevTaskTo];
-                        } else {
-                            const currentDevTasks = featureToAddDevTaskTo.developmentTasks;
-
-                            newDevTaskArray = [...currentDevTasks, devTaskToAdd];
-
-                            featureToAddDevTaskTo.developmentTasks = newDevTaskArray;
-
-                            returnArray = [...otherFeatures,featureToAddDevTaskTo];
-                        }
-
-
-                    }
+                    returnArray = features.filter((feature, arrayIndex) => (arrayIndex !== index)).concat(featureToAddDevTaskTo);
                 } else {
 
 
@@ -263,7 +220,7 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
                         const devTaskToAdd = action.payload.devTask;
                         let currentDevTasks = featureToaddDevTasksTo.developmentTasks;
                         //Add our new devTask to the array
-                        const newDevTaskArray = (typeof currentDevTasks !== "undefined") ? currentDevTasks.concat(devTaskToAdd) : [devTaskToAdd];
+                        const newDevTaskArray = (typeof currentDevTasks !== "undefined") ? currentDevTasks.concat(devTaskToAdd): [devTaskToAdd];
                         featureToaddDevTasksTo.developmentTasks = newDevTaskArray;
                         returnArray = features.filter((feature, index) => !(feature.title === action.payload.title && feature.description === action.payload.description &&
                             feature.type === action.payload.type)).concat(featureToaddDevTasksTo);
@@ -290,58 +247,25 @@ export function FeatureReducer(features: Feature[] | null, action: { type: strin
 
                 const newStatus = action.payload.newStatus;
 
-                  if (typeof action.payload.featureIndex === "number") {
-                    //If features.length === 1 we won´t be able to run filter
-                    const isOnlyOneFeature = (features.length === 1);
-                    const index = action.payload.featureIndex;
-
-
-                    
-
-
-               
-                    
                 if (newStatus === "Complete") {
-                    let featureToCompleteTaskIn = features[featureIndex];
-
+                    let featureToCompleteTaskIn = features.filter((feat, featIndex)=>(featIndex === featureIndex))[0];
+                    
                     featureToCompleteTaskIn.developmentTasks![devTaskIndex].completeTask();
 
-                    if(isOnlyOneFeature){
-
-                    returnArray = [featureToCompleteTaskIn];}
-                    else{
-                        const otherFeatures =    features.filter((feat, fIndex)=>(fIndex !== featureIndex));
-
-                        returnArray = [...otherFeatures, featureToCompleteTaskIn];
-                    }
+                    returnArray = features.filter((feat, featindex)=>(featindex !== featureIndex)).concat(featureToCompleteTaskIn);
                 }
                 else {
 
-                       if(isOnlyOneFeature){
-                           let featureToSetStatusForTaskIn =features[featureIndex];
-                                             featureToSetStatusForTaskIn.developmentTasks![devTaskIndex].currentTaskStatus = newStatus;
-
-
-                    returnArray = [featureToSetStatusForTaskIn];}
-                    else{
-                         let featureToSetStatusForTaskIn = features.filter((feat, featIndex) => (featIndex === featureIndex))[0];
-                                             featureToSetStatusForTaskIn.developmentTasks![devTaskIndex].currentTaskStatus = newStatus;
-
-                        const otherFeatures =    features.filter((feat, fIndex)=>(fIndex !== featureIndex));
-
-                        returnArray = [...otherFeatures, featureToSetStatusForTaskIn];
-                    }
-                   
-
-
+                    let featureToSetStatusForTaskIn = features.filter((feat, featIndex)=>(featIndex === featureIndex))[0];
                     
-                }
+                    featureToSetStatusForTaskIn.developmentTasks![devTaskIndex].currentTaskStatus = newStatus;
 
+                    returnArray = features.filter((feat, featindex)=>(featindex !== featureIndex)).concat(featureToSetStatusForTaskIn);                }
+               
             }
 
         }
-        }
-            break;
+        break;
 
         default: returnArray = features;
             break;

@@ -148,7 +148,7 @@ export class Feature{
      * @returns activeDevelopmentTasks 
      * 
      */
-     getActiveDevelopmentTasks():Task[]{
+    getActiveDevelopmentTasks():Task[]{
 
         let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus==="Active");
          
@@ -156,7 +156,7 @@ export class Feature{
 
     }
 
-   public  getPendingDevelopmentTasks():Task[]{
+    getPendingDevelopmentTasks():Task[]{
 
         let returnArray = this.developmentTasks.filter((devTask)=>devTask.currentTaskStatus=== "Pending");
          

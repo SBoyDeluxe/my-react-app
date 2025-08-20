@@ -90,11 +90,6 @@ body{
 
 }
 
-.hidden{
-
-    display: none;
-}
-
 
 @media(min-width: 600){
 .login-form-container{

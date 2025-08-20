@@ -178,29 +178,6 @@ export const ProjectStore = {
       
 
     }
-  },
-
-   async updateProject(projectToUpdate : Project) : Promise<void>{
-
-      const projectKeyObject = await projectToUpdate.projectKeyObject;
-
-      LoadingStore.updateLoading();
-      try {
-       
-      firebaseClient.updateProject(projectToUpdate, projectKeyObject).then((val)=>{
-
-        LoadingStore.updateLoading();
-        console.log(val);
-        alert(`${projectToUpdate.title} was successfully updated!`);
-
-      }); 
-      } catch (error : unknown) {
-
-        if(error instanceof Error){
-        alert(error.message);
-        LoadingStore.updateLoading();
-        }
-      }
   }
 
 
