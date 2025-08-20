@@ -14,9 +14,7 @@ let root = createRoot(container);
 //firebaseClient.signUp("ja", "ja");
 //firebaseClient.signUp("gif", "gif");
 root.render(
-  <StrictMode>
     <BrowserRouter>
         <App firebaseClient={firebaseClient}  />
     </BrowserRouter>
-  </StrictMode>
 );

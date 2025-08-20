@@ -424,6 +424,94 @@ export class FirebaseAPIClient {
                 return deserializedProject;
             }
         }
+    /**
+     * Gets a project via the ProjectKeyObject sent in project-invites
+     * 
+     * @param projectKeyObject  The projectKeyObject associated with the project
+     * @return {Promise<Project>} The project in question
+     */
+    async updateProject( updatedProject : Project ,projectKeyObject: ProjectKeyObject) {
+
+
+
+            const jsonWebKey = projectKeyObject.projectKey;
+
+                        const projectData = updatedProject as Exclude<Project, ProjectKeyObject>;
+
+
+            const hashVal = await updatedProject.getProjectHash();
+            const projectCryptoKey = await window.crypto.subtle.importKey("jwk", jsonWebKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+
+                const [initVector, uint8Array] = await CryptoUtilObject.encrypt(projectData, projectCryptoKey, false);
+            //Iv first, then the contents
+            const base64String = CryptoUtilObject.encodeBase64(`${initVector}:${uint8Array}`);
+
+            //Define URL to project-table
+            const projectTableUrl = FirebaseURLBuilder.getEndpointURL(`project/${projectKeyObject.projectIndex}.json`);
+
+            const projectUpdateTableUrl= FirebaseURLBuilder.getEndpointURL(`projectupdate/${projectKeyObject.projectIndex}.json`);
+
+            //Fetch from the endpoint
+            const projectPromise = fetch(projectTableUrl, FirebaseURLBuilder.generateOptions("PUT", base64String)).then((response) => {
+
+                if (response.ok) {
+
+                    return response.json();
+                }
+                else {
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - updateProject-function in FirebaseAPIClient`);
+
+                }
+
+            }).then(async (json) => {
+
+                /*The contents are encrypted with aes-gcm and encoded with base64 */
+                const decodedJson = CryptoUtilObject.decodeBase64(json);
+                console.log(decodedJson);
+                const { dataBuffer, ivBuffer } = this.mapIvAndData(decodedJson);
+
+                const decryptedData = await CryptoUtilObject.decrypt(dataBuffer, projectCryptoKey, ivBuffer, false);
+
+                const projectData = JSON.parse(decryptedData) as Exclude<Project, ProjectKeyObject>;
+
+                const project = deserializeProjectData(projectData);
+                project.projectKeyObject = new Promise<ProjectKeyObject>((resolve) => resolve(projectKeyObject))
+
+
+
+
+                return project;
+
+
+            });
+
+             //To notify any user to changes in their projects we use a hash-value, since Event-source is limited in many browser to 6 or less at any given time
+
+            fetch(projectUpdateTableUrl, FirebaseURLBuilder.generateOptions("POST", hashVal)).then((response) => {
+
+                console.log(response)
+                if (!response.ok) {
+
+                    throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - updateProject-function in FirebaseAPIClient (hash-fetch, projectupdate-table)`);
+                }
+
+
+            }
+
+            );
+
+            this.currentUser?.setHashVal(projectKeyObject.projectIndex, hashVal);
+
+            return projectPromise;
+
+
+
+
+            function deserializeProjectData(projectData: Project) {
+                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+                return deserializedProject;
+            }
+        }
 
     /**
      * Gets the user-ids of the user with the given usernames, throws an error if none are found

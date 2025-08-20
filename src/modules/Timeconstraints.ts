@@ -12,7 +12,12 @@ export  class TimeConstraints{
     /**The start date of work on a feature or project */
     private _startdate: Date;
     public get startdate(): string {
-        return this.dateToString(this._startdate);
+                       let startYear = this._startdate.getFullYear();
+    let startMonth = this._startdate.getMonth();
+    let startDay = this._startdate.getDate();
+    let startHours = this._startdate.getHours();
+    let startMinutes = this._startdate.getMinutes();
+    return  `${startYear}/${(startMonth>=10) ? startMonth : `0${startMonth}`} /${(startDay>=10) ? startDay : `0${startDay}`} at ${(startHours>=10) ? startHours : `0${startHours}`}:${(startMinutes>=10) ? startMinutes : `0${startMinutes}`} `;
     }
     public set startdate(value: Date) {
         this._startdate = value;
@@ -20,7 +25,12 @@ export  class TimeConstraints{
     /**The expected end date of work on a feature or project */
     private _enddate: Date;
     public get enddate(): string {
-        return this.dateToString(this._enddate);
+                    let endYear = this._enddate.getFullYear();
+    let endMonth = this._enddate.getMonth();
+    let endDay = this._enddate.getDate();
+    let endHours = this._enddate.getHours();
+    let endMinutes = this._enddate.getMinutes();
+    return  `${endYear}/${(endMonth>=10) ? endMonth : `0${endMonth}`} /${(endDay>=10) ? endDay : `0${endDay}`} at ${(endHours>=10) ? endHours : `0${endHours}`}:${(endMinutes>=10) ? endMinutes : `0${endMinutes}`} `;
     }
     public set enddate(value: Date) {
         this._enddate = value;
@@ -34,7 +44,7 @@ export  class TimeConstraints{
     let completionDay = this._completiondate.getDate();
     let completionHours = this._completiondate.getHours();
     let completionMinutes = this._completiondate.getMinutes();
-        return `${completionYear} - ${completionMonth} - ${completionDay} - ${completionHours} - ${completionMinutes} `;
+        return `${completionYear}/${(completionMonth>=10) ? completionMonth : `0${completionMonth}`} /${(completionDay>=10) ? completionDay : `0${completionDay}`} at ${(completionHours>=10) ? completionHours : `0${completionHours}`}:${(completionMinutes>=10) ? completionMinutes : `0${completionMinutes}`} `;
     } else {
         return null
     }

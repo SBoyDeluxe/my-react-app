@@ -250,6 +250,14 @@ export class Project {
 
     }
 
+    public async getProjectHash(){
+
+          this.hash = CryptoUtilObject.createHash(JSON.stringify(this as Omit<Project, (ProjectKeyObject | ArrayBuffer)>));
+
+          return await this.hash;
+
+    }
+
     public addFeature(feature:Feature){
         if(!this.features){
         this.features = [feature];
