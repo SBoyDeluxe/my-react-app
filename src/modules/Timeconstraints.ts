@@ -17,7 +17,7 @@ export  class TimeConstraints{
     let startDay = this._startdate.getDate();
     let startHours = this._startdate.getHours();
     let startMinutes = this._startdate.getMinutes();
-    return  `${startYear}/${(startMonth>=10) ? startMonth : `0${startMonth}`} /${(startDay>=10) ? startDay : `0${startDay}`} at ${(startHours>=10) ? startHours : `0${startHours}`}:${(startMinutes>=10) ? startMinutes : `0${startMinutes}`} `;
+        return this._startdate.toISOString();
     }
     public set startdate(value: Date) {
         this._startdate = value;
@@ -25,12 +25,8 @@ export  class TimeConstraints{
     /**The expected end date of work on a feature or project */
     private _enddate: Date;
     public get enddate(): string {
-                    let endYear = this._enddate.getFullYear();
-    let endMonth = this._enddate.getMonth();
-    let endDay = this._enddate.getDate();
-    let endHours = this._enddate.getHours();
-    let endMinutes = this._enddate.getMinutes();
-    return  `${endYear}/${(endMonth>=10) ? endMonth : `0${endMonth}`} /${(endDay>=10) ? endDay : `0${endDay}`} at ${(endHours>=10) ? endHours : `0${endHours}`}:${(endMinutes>=10) ? endMinutes : `0${endMinutes}`} `;
+              return this._enddate.toISOString();
+
     }
     public set enddate(value: Date) {
         this._enddate = value;
@@ -44,7 +40,8 @@ export  class TimeConstraints{
     let completionDay = this._completiondate.getDate();
     let completionHours = this._completiondate.getHours();
     let completionMinutes = this._completiondate.getMinutes();
-        return `${completionYear}/${(completionMonth>=10) ? completionMonth : `0${completionMonth}`} /${(completionDay>=10) ? completionDay : `0${completionDay}`} at ${(completionHours>=10) ? completionHours : `0${completionHours}`}:${(completionMinutes>=10) ? completionMinutes : `0${completionMinutes}`} `;
+           return `${completionYear} - ${completionMonth} - ${completionDay} - ${completionHours} - ${completionMinutes} `;
+
     } else {
         return null
     }

@@ -1,11 +1,14 @@
 import { create } from "domain";
 import { CryptoUtilObject } from "./Cryptography_Util";
 import { FirebaseURLBuilder } from "./firebase_url_builder";
-import { Password, User, Username } from "./User";
+import { Client, Developer, Manager, Password, User, Username } from "./User";
 import { Mail, MailBox, MailContent } from "./mailbox";
 import { Project, ProjectKeyObject } from "./project";
 import { createPublicKey } from "crypto";
 import { firebaseClient } from "./react/store/UserStore";
+import { Feature } from "./feature";
+import { TimeConstraints } from "./Timeconstraints";
+import { Task } from "./Task";
 /**
  * FirebaseAPIClient handles the interaction and CRUD-operations between the web-application and the Firebase Realtime Data using the Firebase REST API
  * 
@@ -420,7 +423,61 @@ export class FirebaseAPIClient {
 
 
             function deserializeProjectData(projectData: Project) {
-                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+
+                let managerTeam = (projectData.managerTeam !== null) ?new Array<Manager>(projectData.managerTeam.length) : null;
+                if(managerTeam !== null){
+                projectData.managerTeam.map((manager, index)=>{managerTeam[index] = new Manager(manager.userId, manager.username, (manager.managerType !== null)? manager.managerType : [""])});
+}
+                let clients = (projectData.clients !== null) ? new Array<Client>(projectData.clients.length) : null;
+
+                if(clients !== null){
+
+                    projectData.clients?.map((client, index)=>{
+                        clients[index] = new Client(client.username, client.userId);
+                    })
+                }
+                let developerTeam = (projectData.developerTeam !== null) ? new Array<Developer>(projectData.developerTeam.length) : null;
+
+                  if(developerTeam !== null){
+
+                    projectData.developerTeam?.map((dev, index)=>{
+                        developerTeam[index] = new Developer(dev.userId, dev.username, (dev.developerType !== null)? dev.developerType : [""]);
+                    })
+                }
+               
+                let features = (projectData.features !== null) ? new Array<Feature>(projectData.features.length) : null;
+
+                
+                  if(features !== null){
+
+                    projectData.features?.map((feature, index)=>{
+
+                        let devTasks = (feature.developmentTasks !== null) ? new Array<Task>(feature.developmentTasks?.length) : null;
+
+                        if(feature.developmentTasks !== null){
+                            let assignedDevs = null;
+                            let taskGoals = null;
+                            feature.developmentTasks?.map((val, index)=>{
+                                if(feature.developmentTasks[index].assignedDevelopers !== null){
+                                    assignedDevs  = val.assignedDevelopers?.map((dev)=> new Developer(dev.userId, dev.username, (dev.developerType!== null)?dev.developerType : [""]));
+                                }
+
+                                if(val.taskGoals !== null){
+                                    taskGoals = val.taskGoals.map((val)=>new Task(val.type, val.description, new TimeConstraints(new Date(val.timeconstraints.startdate), new Date(val.timeconstraints.enddate)), assignedDevs, null, val.currentTaskStatus ));
+
+                                }
+                                devTasks[index] = new Task(val.type, val.description, new TimeConstraints(new Date(val.timeconstraints.startdate), new Date(val.timeconstraints.enddate)),assignedDevs, taskGoals, val.currentTaskStatus);
+                            })
+                        }
+
+                        
+                        features[index] = new Feature(feature.title, feature.type, feature.description, new TimeConstraints(new Date( feature.timeconstraints.startdate), new Date( feature.timeconstraints.enddate)), devTasks, feature.assignedDevelopers);
+                    })
+                }
+
+                let timeConstraints = new TimeConstraints(new Date(Date.parse(projectData.timeconstraints.startdate)), new Date(Date.parse(projectData.timeconstraints.enddate)));
+                
+                let deserializedProject = new Project(projectData.title, managerTeam, clients, features, developerTeam, projectData.description, timeConstraints);
                 return deserializedProject;
             }
         }
