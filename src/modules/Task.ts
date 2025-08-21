@@ -37,7 +37,7 @@ export class Task {
     /**Represents the status of the given task
      * @property {Task.taskStatus.active |Task.taskStatus.pending|Task.taskStatus.completed}
      */
-    currentTaskStatus: "Active"|"Pending"|"Completed";
+    currentTaskStatus: "Active" | "Pending" | "Completed";
     /**The overall specification of the task
      * 
      */
@@ -58,7 +58,7 @@ export class Task {
         assignedDevelopers: Developer[] | null,
 
         taskGoals: Task[] | null,
-        currentTaskStatus: "Active"|"Pending"|"Completed"
+        currentTaskStatus: "Active" | "Pending" | "Completed"
 
 
 
@@ -79,9 +79,9 @@ export class Task {
         else {
             this.taskGoals = null;
         }
-            this.currentTaskStatus = currentTaskStatus;
-        
-       
+        this.currentTaskStatus = currentTaskStatus;
+
+
 
     }
 
@@ -114,7 +114,7 @@ export class Task {
     public completeTask() {
 
         this.timeconstraints.completeConstraint();
-        this.currentTaskStatus ="Completed";
+        this.currentTaskStatus = "Completed";
     }
 
     public updateTimeConstraints(startDate: Date | null, endDate: Date | null) {
@@ -169,7 +169,7 @@ export class Task {
      * @returns {number} fractionOfCompletion
      * 
      */
-    public getProgress() : number {
+    public getProgress(): number {
 
 
 
@@ -200,8 +200,12 @@ export class Task {
 
         }
 
+     
+
         return completedTaskGoals / totalTaskGoals;
     }
+
+    
 
 }
 

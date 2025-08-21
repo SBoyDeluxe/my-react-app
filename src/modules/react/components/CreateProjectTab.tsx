@@ -184,9 +184,9 @@ export function CreateProjectTab( ): ReactNode {
                 //        const todaysDate = TimeConstraints.getLocalTimeParameters(new Date(Date.now())) ;
                 const currentUser = userStore;
                 const currentUserAsInput = { username: currentUser?.username.username, userId: currentUser?.authParameters.userId }
-                const allVariablesExist = (projectTitle.trim() !== "") && (projectDescription.trim() !== "") && (projectStartTime.trim() !== "") && (projectEndTime.trim() !== "") && (projectManagers.length >= 1)
+                const allVariablesExist = (projectTitle.trim() !== "") && (projectDescription.trim() !== "") && (projectStartTime.trim() !== "") && (projectEndTime.trim() !== "") && (projectManagers.length >= 1) && (projectManagers[0].userId !== -1)
                         && ((projectManagers.filter((manager) => (manager.username === currentUserAsInput.username && manager.userId === currentUserAsInput.userId))[0] !== undefined) ||
-                                (projectDevelopers.filter(dev => (dev.username === currentUserAsInput.username && dev.userId === currentUserAsInput.userId))[0]!==undefined));
+                                (projectDevelopers.filter(dev => (dev.username === currentUserAsInput.username && dev.userId === currentUserAsInput.userId))[0]!==undefined) && (projectDevelopers.length >=1) ) && (projectDevelopers[0].userId !== -1);
                 if (allVariablesExist) {
                         const startDate = new Date(projectStartTime);
                         const endDate = new Date(projectEndTime);
@@ -228,6 +228,11 @@ export function CreateProjectTab( ): ReactNode {
                                 
 
                         }
+                }
+
+                else{
+
+                    alert("To create project the input must hold : Title, description, a start and end-time at least 1 project manager, at least 1 project developer (Can be the same user) and the creating user must be included as a developer, manager or both. \n \t Please, try again!")
                 }
         }
 

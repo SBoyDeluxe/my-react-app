@@ -150,6 +150,17 @@ public  getTimePassedFraction(){
   return timePassed/totalTime;
 }
 
+   public static  getAsFormattedString(date: Date): string {
+
+        let dateYear = date.getFullYear();
+        let dateMonth = date.getMonth();
+        let dateDay = date.getDate();
+        let dateHours = date.getHours();
+        let dateMinutes = date.getMinutes();
+        return `${dateYear}/${(dateMonth >= 10) ? dateMonth : `0${dateMonth}`} /${(dateDay >= 10) ? dateDay : `0${dateDay}`} at ${(dateHours >= 10) ? dateHours : `0${dateHours}`}:${(dateMinutes >= 10) ? dateMinutes : `0${dateMinutes}`} `;
+
+    }
+
 }
 
 

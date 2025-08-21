@@ -6,6 +6,10 @@ import { Mail, MailBox, MailContent } from "./mailbox";
 import { Project, ProjectKeyObject } from "./project";
 import { createPublicKey } from "crypto";
 import { firebaseClient } from "./react/store/UserStore";
+import { features } from "process";
+import { Feature } from "./feature";
+import { TimeConstraints } from "./Timeconstraints";
+import { Task } from "./Task";
 /**
  * FirebaseAPIClient handles the interaction and CRUD-operations between the web-application and the Firebase Realtime Data using the Firebase REST API
  * 
@@ -420,7 +424,16 @@ export class FirebaseAPIClient {
 
 
             function deserializeProjectData(projectData: Project) {
-                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+
+                projectData.features!.forEach((element, index) => {
+                  let developmentTasks =      element.developmentTasks?.map((devTask)=> new Task(devTask.type, devTask.description, devTask.timeconstraints, devTask.assignedDevelopers, null, devTask.currentTaskStatus));
+                  element.developmentTasks = developmentTasks;
+                });
+                let features = (projectData.features !== null) ? projectData.features?.map((feature)=> new Feature(feature.title, feature.type, feature.description, new TimeConstraints(feature.timeconstraints._startdate, feature.timeconstraints._enddate), feature.developmentTasks, feature.assignedDevelopers)) : null;
+                    
+             
+
+                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
                 return deserializedProject;
             }
         }
@@ -612,7 +625,7 @@ export class FirebaseAPIClient {
                         await CryptoUtilObject.decrypt(dataBuffer, null, ivBuffer, false).then(async (val) => {
                             if (val!.includes(username)) {
                                 // If username is included we want to throw an error
-                                throw new Error("Username was taken, please try another one!");
+                                window.alert("Username was taken, please try another one!");
 
                             }
                             else {
@@ -670,7 +683,7 @@ export class FirebaseAPIClient {
 
                             throw new Error(`HTTP-status code : ${response.status} : ${response.statusText} - Could not write to /username`);
                         }
-                    });
+                    }).catch((error : unknown)=>alert(error));
 
                     //We create the user-keys 
                     const { userTableEntry, userToAdd } = await createUser();

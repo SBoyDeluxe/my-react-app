@@ -59,25 +59,39 @@ export const UserStore = {
 
 
     LoadingStore.updateLoading();
-    firebaseClient.signUp(username, password).then((newUser) => {
-      LoadingStore.updateLoading();
-     user = newUser;
-      emitChangeUser();
-     
-
-    });
+   try {
+     firebaseClient.signUp(username, password).then((newUser) => {
+       LoadingStore.updateLoading();
+      user = newUser;
+       emitChangeUser();
+      
+ 
+     });
+   } catch (error : unknown) {
+    if(error instanceof Error){
+      alert(error);
+    }
+    
+   }
 
 
   },
   async login(username: string, password: string) {
     LoadingStore.updateLoading();
-    firebaseClient.loginUser(username, password).then((newUser) => {
-      LoadingStore.updateLoading();
-      user = newUser;
-      emitChangeUser();
-     
-
-    });
+   try {
+     firebaseClient.loginUser(username, password).then((newUser) => {
+       LoadingStore.updateLoading();
+       user = newUser;
+       emitChangeUser();
+      
+ 
+     });
+   } catch (error : unknown) {
+    if(error instanceof Error){
+      alert(error.message);
+    }
+    
+   }
 
   },
   async logOut() {
