@@ -425,15 +425,17 @@ export class FirebaseAPIClient {
 
             function deserializeProjectData(projectData: Project) {
 
+                let features = projectData.features;
+                if(projectData.features !== null){
                 projectData.features!.forEach((element, index) => {
                   let developmentTasks =      element.developmentTasks?.map((devTask)=> new Task(devTask.type, devTask.description, devTask.timeconstraints, devTask.assignedDevelopers, null, devTask.currentTaskStatus));
                   element.developmentTasks = developmentTasks;
                 });
                 let features = (projectData.features !== null) ? projectData.features?.map((feature)=> new Feature(feature.title, feature.type, feature.description, new TimeConstraints(feature.timeconstraints._startdate, feature.timeconstraints._enddate), feature.developmentTasks, feature.assignedDevelopers)) : null;
-                    
+                    }
              
 
-                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
+                let deserializedProject = new Project(projectData.title, projectData.managerTeam, projectData.clients, projectData.features, projectData.developerTeam, projectData.description, projectData.timeconstraints);
                 return deserializedProject;
             }
         }
