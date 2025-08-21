@@ -53,8 +53,8 @@ export function FeatureTableRows({ feature, featureIndex, handleStatusChange }: 
                 <Button isDisabled={false} onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();
                     //make action object
-                    const devTaskIndex = feature.developmentTasks?.findIndex((task) => ((task.type === task.type) && (task.description === task.description)
-                        && (task.assignedDevelopers === task.assignedDevelopers)));
+                    const devTaskIndex = feature.developmentTasks?.findIndex((taskIn) => ((taskIn.type === taskIn.type) && (taskIn.description === task.description)
+                        && (taskIn.assignedDevelopers === task.assignedDevelopers)));
 
                     const action = {
                         type: "CHANGE_DEV_TASK_STATUS",
@@ -74,8 +74,8 @@ export function FeatureTableRows({ feature, featureIndex, handleStatusChange }: 
                 <Button isDisabled={false} onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();
                     //make action object
-                    const devTaskIndex = feature.developmentTasks?.findIndex((task) => ((task.type === task.type) && (task.description === task.description)
-                        && (task.assignedDevelopers === task.assignedDevelopers)));
+                    const devTaskIndex = feature.developmentTasks?.findIndex((taskIn) => ((taskIn.type === task.type) && (taskIn.description === task.description)
+                        && (taskIn.assignedDevelopers === task.assignedDevelopers)));
                     const action = {
                         type: "CHANGE_DEV_TASK_STATUS",
                         payload: {
@@ -151,8 +151,8 @@ export function FeatureTableRows({ feature, featureIndex, handleStatusChange }: 
     let completedTaskSafeBool = true;
     tableRows = new Array(amountOfDifferentTasks[0]);
     for (let i = 0; i < amountOfDifferentTasks[0]; i++) {
-        if (refsForCompletedTasks.length > 0) {
-            if (refsForCompletedTasks[i].current === null) {
+        if (refsForCompletedTasks.length > 0 && i < refsForCompletedTasks.length) {
+            if (refsForCompletedTasks[i].current === null || typeof refsForCompletedTasks[i].current === "undefined") {
                 completedTaskSafeBool = true;
             }
             else {

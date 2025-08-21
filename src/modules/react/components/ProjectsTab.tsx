@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useEffect, useSyncExternalStore, Key, useReducer, Fragment } from "react";
+import { useContext, useEffect, useSyncExternalStore, Key, useReducer, Fragment } from "react";
 import { Developer } from "../../User";
 import { MailboxStore, ProjectStore } from "../store/UserStore";
 import { Project } from "../../project";
@@ -14,10 +14,10 @@ import { Task } from "../../Task";
 import { get } from "node:http";
 import { ThemeValues } from "../../theme";
 import { JSX } from "react/jsx-runtime";
-import { FeatureTableRows } from "./FeatureTableRows";
 import { AddFeaturesElement } from "./AddFeaturesElement";
 import { AddTaskElement } from "./AddTaskElement";
 import { ProjectSchedule } from "./ProjectSchedule";
+import { FeatureOverview } from "./FeatureOverview";
 
 
 
@@ -104,7 +104,7 @@ export type AddFeaturesElementProps = {
 
 }
 
-type FeatureOverviewProps = {
+export type FeatureOverviewProps = {
 
     features: Feature[] | null,
 
@@ -234,85 +234,6 @@ function ProjectView({ project }: ProjectViewProps) {
     </Background>;
 
     <hr></hr>
-}
-
-function FeatureOverview({ handleStatusChange, features }: FeatureOverviewProps): ReactNode {
-
-
-
-
-
-    if (features === null) {
-
-        return <></>
-    }
-    else {
-
-
-
-        const keysForFeatures = getKeysForList(features);
-        let assignedDevList: ReactNode = (<></>)
-        const appThemeContext = useContext(themeContext);
-        let tableRows = (<></>)
-        return features.map((feature, index) => {
-
-            if (feature.developmentTasks !== null) {
-
-                let assignedFeatureDevelopers = feature.assignedDevelopers;
-                if (assignedFeatureDevelopers !== null) {
-                    const keys = getKeysForList(assignedFeatureDevelopers);
-                    assignedDevList = assignedFeatureDevelopers?.map((dev, index) => {
-                        const devTypeElement = (dev.developerType[0] !== "") ? `(${dev.developerType})` : "";
-                        return (
-                            <li key={keys[index]}>{dev.username} {devTypeElement}</li>
-                        );
-                    });
-                }
-                tableRows = (<FeatureTableRows feature={feature} featureIndex={index} handleStatusChange={handleStatusChange}></FeatureTableRows>)
-
-
-            }
-
-
-
-            return (
-                <details key={keysForFeatures[index]} style={{ border: `medium solid ${appThemeContext.tertiaryContentColor} ` }}>
-                    <summary> {"Feature overview : "}</summary>
-                    <Background cssClassName="feature-overview" >
-                        <h3> {`${feature.title} ${feature.type ? `(${feature.type})` : ""}`} </h3>
-                        <textarea defaultValue={feature.description} />
-
-
-                        <details>
-                            <summary>{"Task-schedule : "}</summary>
-                            <table>
-
-                                <thead>
-                                    <tr>
-                                        <th scope="col">{"Pending tasks :"}</th>
-                                        <th scope="col">{"Active tasks :"}</th>
-                                        <th scope="col">{"Completed tasks :"}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tableRows}
-                                </tbody>
-                            </table>
-                        </details>
-                        <details>
-                            <summary>{"Assigned developers :"}</summary>
-                            <ul>
-                                {assignedDevList}
-                            </ul>
-
-
-                        </details>
-                    </Background>
-                </details>
-            );
-        }
-        );
-    }
 }
 
 /**

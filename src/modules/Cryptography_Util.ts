@@ -3,9 +3,7 @@ import { Project } from "./project";
 import { Feature } from "./feature";
 import { Task } from "./Task";
 import file from "../assets/application_key.json";
-import {type,Base64} from 'js-base64';
-import { MailContent } from "./mailbox";
-import { escape, unescape } from "node:querystring";
+import {Base64} from 'js-base64';
     import { pbkdf2 } from "node:crypto";
 
 
